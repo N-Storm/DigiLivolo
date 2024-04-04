@@ -1,0 +1,15 @@
+{
+  "name": "framework-arduino-avr-digistump",
+  "version": "1.7.5",
+  "description": "Arduino Wiring-based Framework for Microchip AVR microcontrollers (Digistump Core)",
+  "keywords": [
+    "framework",
+    "arduino",
+    "microchip",
+    "avr"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/ArminJo/DigistumpArduino/tree/v1.7.5/digistump-avr"
+  }
+}

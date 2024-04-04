@@ -1,0 +1,103 @@
+# See: http://code.google.com/p/arduino/wiki/Platforms
+
+menu.clock=Clock
+menu.chip=Chip
+menu.buffer=Serial buffer size
+menu.bod=B.O.D. Level
+menu.eesave=Save EEPROM
+menu.LTO=LTO (1.6.11+ only)
+menu.neopixelport=tinyNeoPixel Port
+menu.millis=millis()/micros()
+menu.micronucleus=Micronucleus variant
+menu.burnmode=Burn Bootloader Method
+
+##############################################################
+
+digispark-tiny.name=Digispark
+
+digispark-tiny.build.mcu=attiny85
+digispark-tiny.menu.clock.clock16=16 MHz - No USB
+digispark-tiny.menu.clock.clock165=16.5 MHz - For V-USB
+digispark-tiny.menu.clock.clock8=8 MHz - No USB
+digispark-tiny.menu.clock.clock1=1 MHz - No USB
+digispark-tiny.menu.clock.clock16.build.f_cpu=16000000L
+digispark-tiny.menu.clock.clock165.build.f_cpu=16500000L
+digispark-tiny.menu.clock.clock8.build.f_cpu=8000000L
+digispark-tiny.menu.clock.clock1.build.f_cpu=1000000L
+digispark-tiny.build.board=AVR_DIGISPARK
+digispark-tiny.build.core=tiny
+digispark-tiny.build.variant=digispark
+
+# not required for tiny
+digispark-tiny.build.SerialBufferSize=
+
+digispark-tiny.upload.protocol=usb
+# Name of variant of tools.* in platform.txt and tools: section in index.json
+digispark-tiny.upload.tool=micronucleus
+# RAM available. Is set to PROPERTY_UPLOAD_MAX_DATA_SIZE and used in sizer.go for printing sketch size
+digispark-tiny.upload.maximum_data_size=512
+# Calls waitForNewSerialPort(), sets serial.port and serial.port.file
+digispark-tiny.upload.wait_for_upload_port = false
+# Perform reset via 1200bps touch if requested
+digispark-tiny.upload.use_1200bps_touch = false
+
+digispark-tiny.menu.micronucleus.default=Default (6650 bytes avail.)
+digispark-tiny.menu.micronucleus.default.upload.maximum_size=6650
+digispark-tiny.menu.micronucleus.default.bootloader.file=upgrade-t85_default.hex
+digispark-tiny.menu.micronucleus.recommended=Recommended (6586 bytes avail.)
+digispark-tiny.menu.micronucleus.recommended.upload.maximum_size=6586
+digispark-tiny.menu.micronucleus.recommended.bootloader.file=upgrade-t85_entry_on_powerOn_activePullup_fastExit.hex
+digispark-tiny.menu.micronucleus.entryReset=Entry on reset (6586 bytes avail.)
+digispark-tiny.menu.micronucleus.entryReset.upload.maximum_size=6586
+digispark-tiny.menu.micronucleus.entryReset.bootloader.file=upgrade-t85_entry_on_reset_activePullup_fastExit.hex
+digispark-tiny.menu.micronucleus.agressive=Agressive (6778)
+digispark-tiny.menu.micronucleus.agressive.upload.maximum_size=6778
+digispark-tiny.menu.micronucleus.agressive.bootloader.file=upgrade-t85_agressive.hex
+
+digispark-tiny.menu.burnmode.upgrade=Upgrade (via USB)
+digispark-tiny.menu.burnmode.upgrade.bootloader.tool=micronucleus
+digispark-tiny.menu.burnmode.install=Fresh Install (via ISP)
+digispark-tiny.menu.burnmode.install.bootloader.tool=avrdude
+digispark-tiny.menu.burnmode.info=Bootloader informations (via USB), no programming
+digispark-tiny.menu.burnmode.info.bootloader.tool=micronucleus_info
+
+##############################################################
+
+digispark-pro.name=Digispark Pro (16 MHz)
+
+digispark-pro.build.mcu=attiny167
+digispark-pro.build.f_cpu=16000000L
+digispark-pro.build.board=AVR_DIGISPARKPRO
+digispark-pro.build.core=pro
+digispark-pro.build.variant=pro
+
+digispark-pro.menu.buffer.buffer16=16 byte serial buffer
+digispark-pro.menu.buffer.buffer32=32 byte serial buffer
+digispark-pro.menu.buffer.buffer64=64 byte serial buffer
+digispark-pro.menu.buffer.buffer16.build.SerialBufferSize=16
+digispark-pro.menu.buffer.buffer32.build.SerialBufferSize=32
+digispark-pro.menu.buffer.buffer64.build.SerialBufferSize=64
+
+digispark-pro.upload.protocol=usb
+digispark-pro.upload.tool=micronucleus
+digispark-pro.upload.maximum_data_size=512
+digispark-pro.upload.wait_for_upload_port = false
+digispark-pro.upload.use_1200bps_touch = false
+
+digispark-pro.menu.micronucleus.default=Default (14970 bytes avail.)
+digispark-pro.menu.micronucleus.default.upload.maximum_size=14970
+digispark-pro.menu.micronucleus.default.bootloader.file=upgrade-t167_default.hex
+digispark-pro.menu.micronucleus.recommended=Recommended (14970 bytes avail.)
+digispark-pro.menu.micronucleus.recommended.upload.maximum_size=14970
+digispark-pro.menu.micronucleus.recommended.bootloader.file=upgrade-t167_entry_on_powerOn_activePullup_fastExit.hex
+digispark-pro.menu.micronucleus.entryReset=Entry on reset (14970 bytes avail.)
+digispark-pro.menu.micronucleus.entryReset.upload.maximum_size=14970
+digispark-pro.menu.micronucleus.entryReset.bootloader.file=upgrade-t167_entry_on_reset_activePullup_fastExit.hex
+
+digispark-pro.menu.burnmode.upgrade=Upgrade (via USB)
+digispark-pro.menu.burnmode.upgrade.bootloader.tool=micronucleus
+digispark-pro.menu.burnmode.install=Fresh Install (via ISP)
+digispark-pro.menu.burnmode.install.bootloader.tool=avrdude
+digispark-pro.menu.burnmode.info=Bootloader informations (via USB), no programming
+digispark-pro.menu.burnmode.info.bootloader.tool=micronucleus_info
+##############################################################
