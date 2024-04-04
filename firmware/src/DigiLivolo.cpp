@@ -3,14 +3,14 @@
 #include <livolo.h>
 #include <stdint.h>
 
-#define LIVOLO_REMOTE_ID 8525
-
-Livolo livolo(PIN_B5); // transmitter connected to pin #8
+Livolo livolo(PIN_B5); // transmitter connected to pin #5
 dlusb_packet_t in_buf, out_buf;
 
 void prep_rdy_packet(dlusb_packet_t* packet) {
   packet->report_id = REPORT_ID;
   packet->cmd_id = CMD_RDY;
+  
+  // Just some unused "magic" data to test connection below
   packet->remote_id = 0xABCD;
   packet->btn_id = 0xEF;
 }
