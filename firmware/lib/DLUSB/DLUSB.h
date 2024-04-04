@@ -10,22 +10,33 @@
 #include <avr/pgmspace.h>
 #include <avr/interrupt.h>
 #include <string.h>
+#include <stdint.h>
 #include "usbdrv.h"
-#include "Print.h"
+ // #include "Print.h"
 
-typedef uint8_t byte;
+ // typedef uint8_t byte;
 
 #include <util/delay.h>     /* for _delay_ms() */
 
-#define RING_BUFFER_SIZE 128
+/* Buffer size for USB TX & RX buffers. This is not the bytes, it's a count of dlusb_packet_t
+   structures it holds. I.e. how many packets it can store.
+   */
+#define RING_BUFFER_SIZE 16
+
+typedef struct {
+  uint8_t report_id;
+  uint8_t cmd_id;
+  uint16_t remote_id;
+  uint8_t btn_id;
+} dlusb_packet_t;
 
 struct ring_buffer {
-  unsigned char buffer[RING_BUFFER_SIZE];
+  dlusb_packet_t buffer[RING_BUFFER_SIZE];
   int head;
   int tail;
 };
 
-class DLUSBDevice : public Print {
+class DLUSBDevice {
 private:
   ring_buffer* _rx_buffer;
   ring_buffer* _tx_buffer;
@@ -35,19 +46,14 @@ public:
 
   void begin();
 
-  // TODO: Deprecate update
-  void update();
-
   void refresh();
   void delay(long milliseconds);
 
   int available();
   int tx_remaining();
 
-  int read();
-  virtual size_t write(byte c);
-  using Print::write;
-
+  dlusb_packet_t* read();
+  size_t write(dlusb_packet_t* packet_ptr);
 };
 
 extern DLUSBDevice DLUSB;

@@ -13,7 +13,7 @@ int input_buf;
 void setup() {
   DLUSB.begin();
   DLUSB.refresh();
-  DLUSB.write(0xFF);
+  // DLUSB.write(0xFF);
   DLUSB.refresh();
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
@@ -24,7 +24,7 @@ void get_input() {
   while (true) {
     if (DLUSB.available()) {
       //something to read
-      input_buf = DLUSB.read();
+      // input_buf = DLUSB.read();
       // DLUSB.write(input_buf);
       break;
     }
@@ -43,14 +43,14 @@ void loop() {
     digitalWrite(LED_BUILTIN, HIGH);
     livolo.sendButton(LIVOLO_REMOTE_ID, input_buf);
     DLUSB.refresh();
-    DLUSB.write(input_buf);
+    // DLUSB.write(input_buf);
     DLUSB.delay(100);
     input_buf = 0;
     digitalWrite(LED_BUILTIN, LOW);
   }
   else {
     DLUSB.refresh();
-    DLUSB.write(0xFA);
+    // DLUSB.write(0xFA);
   }
 
   DLUSB.delay(10);
