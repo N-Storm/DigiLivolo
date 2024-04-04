@@ -1,6 +1,6 @@
 [submodule "v-usb"]
-	path = lib/v-usb
+	path = extra/v-usb
 	url = https://github.com/obdev/v-usb.git
 [submodule "lib/hidapi"]
-	path = lib/hidapi
+	path = extra/hidapi
 	url = https://github.com/libusb/hidapi.git
