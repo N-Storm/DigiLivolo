@@ -23,6 +23,12 @@
    */
 #define RING_BUFFER_SIZE 16
 
+#define REPORT_ID 0x4c
+
+#define CMD_SWITCH 0x01
+#define CMD_RDY 0x10
+#define CMD_FAIL_BIT (uint8_t)(1 << 7)
+
 typedef struct {
   uint8_t report_id;
   uint8_t cmd_id;
@@ -52,8 +58,8 @@ public:
   int available();
   int tx_remaining();
 
-  dlusb_packet_t* read();
-  size_t write(dlusb_packet_t* packet_ptr);
+  bool read(dlusb_packet_t* packet);
+  bool write(dlusb_packet_t* packet);
 };
 
 extern DLUSBDevice DLUSB;

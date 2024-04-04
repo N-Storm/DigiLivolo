@@ -32,21 +32,20 @@
 ring_buffer rx_buffer = { { 0 }, 0, 0 };
 ring_buffer tx_buffer = { { 0 }, 0, 0 };
 
-inline uint8_t store_packet(dlusb_packet_t* packet_ptr, ring_buffer* the_buffer)
+inline bool store_packet(dlusb_packet_t* packet, ring_buffer* the_buffer)
 {
-  uint8_t i = (the_buffer->head + 1) % RING_BUFFER_SIZE;
+  uint8_t newhead = (the_buffer->head + 1) % RING_BUFFER_SIZE;
 
-  // if we should be storing the received character into the location
+  // if we should be storing the received data into the location
   // just before the tail (meaning that the head would advance to the
   // current location of the tail), we're about to overflow the buffer
-  // and so we don't write the character or advance the head.
-  if (i != the_buffer->tail) {
-    memcpy(&(the_buffer->buffer[the_buffer->head]), packet_ptr, sizeof(dlusb_packet_t));
-    // the_buffer->buffer[the_buffer->head] = packet;
-    the_buffer->head = i;
-    return 1;
+  // and so we don't write to the buffer or advance the head.
+  if (newhead != the_buffer->tail && newhead <= RING_BUFFER_SIZE) {
+    memcpy(&the_buffer->buffer[the_buffer->head], packet, sizeof(dlusb_packet_t));
+    the_buffer->head = newhead;
+    return true;
   }
-  return 0;
+  return false;
 }
 
 DLUSBDevice::DLUSBDevice(ring_buffer* rx_buffer,
@@ -87,8 +86,6 @@ void DLUSBDevice::delay(long milli) {
 }
 
 int DLUSBDevice::available() {
-  /*
-   */
   return (RING_BUFFER_SIZE + _rx_buffer->head - _rx_buffer->tail) % RING_BUFFER_SIZE;
 }
 
@@ -96,48 +93,38 @@ int DLUSBDevice::tx_remaining() {
   return RING_BUFFER_SIZE - (RING_BUFFER_SIZE + _tx_buffer->head - _tx_buffer->tail) % RING_BUFFER_SIZE;
 }
 
-dlusb_packet_t* DLUSBDevice::read() {
-  /*
-   */
-   // if the head isn't ahead of the tail, we don't have any characters
+bool DLUSBDevice::read(dlusb_packet_t* packet) {
+  // if the head isn't ahead of the tail, we don't have any characters
   if (_rx_buffer->head == _rx_buffer->tail) {
-    return NULL;
+    return false;
   }
   else {
-    dlusb_packet_t* packet_ptr = &(_rx_buffer->buffer[_rx_buffer->tail]);
+    memcpy(packet, &_rx_buffer->buffer[_rx_buffer->tail], sizeof(dlusb_packet_t));
     _rx_buffer->tail = (_rx_buffer->tail + 1) % RING_BUFFER_SIZE;
-    return packet_ptr;
+    return true;
   }
 }
 
-size_t DLUSBDevice::write(dlusb_packet_t* packet_ptr) {
-  return 1;
-  // return store_packet(packet_ptr, _tx_buffer);
+bool DLUSBDevice::write(dlusb_packet_t* packet) {
+  return store_packet(packet, _tx_buffer);
 }
-
 
 // TODO: Handle this better?
 int tx_available() {
-  /*
-   */
   return (RING_BUFFER_SIZE + tx_buffer.head - tx_buffer.tail) % RING_BUFFER_SIZE;
 }
 
-dlusb_packet_t* tx_read() {
-  /*
-   */
-   // if the head isn't ahead of the tail, we don't have any characters
+bool tx_read(dlusb_packet_t* packet) {
+  // if the head isn't ahead of the tail, we don't have any characters
   if (tx_buffer.head == tx_buffer.tail) {
-    return NULL;
+    return false;
   }
   else {
-    dlusb_packet_t* packet_ptr = &(tx_buffer.buffer[tx_buffer.tail]);
+    memcpy(packet, &tx_buffer.buffer[tx_buffer.tail], sizeof(dlusb_packet_t));
     tx_buffer.tail = (tx_buffer.tail + 1) % RING_BUFFER_SIZE;
-    return packet_ptr;
+    return true;
   }
 }
-
-
 
 
 /* ------------------------------------------------------------------------- */
@@ -154,10 +141,10 @@ extern "C" {
     0x09, 0x6b,                    //   USAGE (SwitchOn/Off)
     0x15, 0x00,                    //   LOGICAL_MINIMUM (0)
     0x26, 0xff, 0x00,              //   LOGICAL_MAXIMUM (255)
-    0x85, 0x4c,                    //   REPORT_ID (76)
+    0x85, REPORT_ID,               //   REPORT_ID (76)
     0x09, 0x52,                    //   USAGE (ToggleControl)
     0x75, 0x08,                    //   REPORT_SIZE (8)
-    0x95, 0x08,                    //   REPORT_COUNT (8)
+    0x95, 0x07,                    //   REPORT_COUNT (7)
     0xb2, 0x02, 0x01,              //   FEATURE (Data,Var,Abs,Buf)
     0xc0                           // END_COLLECTION
   };
@@ -171,11 +158,10 @@ extern "C" {
     if ((rq->bmRequestType & USBRQ_TYPE_MASK) == USBRQ_TYPE_CLASS) {    /* HID class request */
       if (rq->bRequest == USBRQ_HID_GET_REPORT) {  /* wValue: ReportType (highbyte), ReportID (lowbyte) */
         /* since we have only one report type, we can ignore the report-ID */
-        static dlusb_packet_t* packet_ptr;  /* buffer must stay valid when usbFunctionSetup returns */
+        static dlusb_packet_t packet[1];  /* buffer must stay valid when usbFunctionSetup returns */
         if (tx_available()) {
-          packet_ptr = tx_read();
-          if (packet_ptr) {
-            usbMsgPtr = (unsigned char*)packet_ptr; /* tell the driver which data to return */
+          if (tx_read(&packet[0])) {
+            usbMsgPtr = (unsigned char*)packet; /* tell the driver which data to return */
             return sizeof(dlusb_packet_t); /* tell the driver to send 1 byte */
           }
           else
@@ -190,11 +176,11 @@ extern "C" {
         return USB_NO_MSG;  /* use usbFunctionWrite() to receive data from host */
 
         // TODO: Check race issues?
-    //	  store_packet(rq->wValue.bytes[0] * 8, &rx_buffer);
-    //	  store_packet(rq->wValue.bytes[0], &rx_buffer);
-    //	  store_packet(rq->wIndex.bytes[0], &rx_buffer);
-    //	  store_packet(rq->wIndex.bytes[1], &rx_buffer);
-    //        store_packet(0xAA, &rx_buffer);
+        // store_packet(rq->wValue.bytes[0] * 8, &rx_buffer);
+        // store_packet(rq->wValue.bytes[0], &rx_buffer);
+        // store_packet(rq->wIndex.bytes[0], &rx_buffer);
+        // store_packet(rq->wIndex.bytes[1], &rx_buffer);
+        // store_packet(0xAA, &rx_buffer);
 
       }
     }
@@ -204,20 +190,12 @@ extern "C" {
     return 0;
   }
 
-  uchar   usbFunctionWrite(uchar* data, uchar len)
+  uchar  usbFunctionWrite(uchar* data, uchar len)
   {
-    /*
-        uchar usbReportId = data[0];
-        if (usbReportId == 1 && len == 2)
-          store_packet((uchar)data[1], &rx_buffer);
-        else if (usbReportId == 2 && len == 4) {
-          store_packet((uchar)data[2], &rx_buffer);
-          store_packet((uchar)data[1], &rx_buffer);
-          store_packet((uchar)data[3], &rx_buffer);
-        }
-    */
-    //    if(len == 2)
-    //        store_packet((uchar)data[1], &rx_buffer);
+    dlusb_packet_t* p = (dlusb_packet_t*)data;
+    if (p->report_id == REPORT_ID && p->cmd_id == CMD_SWITCH && len <= sizeof(dlusb_packet_t))
+      if (!store_packet(p, &rx_buffer))
+        return 0xff; // Return FAIL code
 
     return 1;
   }

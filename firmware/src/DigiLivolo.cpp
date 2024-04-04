@@ -1,5 +1,3 @@
-
-
 #include <Arduino.h>
 #include <DLUSB.h>
 #include <livolo.h>
@@ -8,50 +6,38 @@
 #define LIVOLO_REMOTE_ID 8525
 
 Livolo livolo(PIN_B5); // transmitter connected to pin #8
-int input_buf;
+dlusb_packet_t in_buf, out_buf;
+
+void prep_rdy_packet(dlusb_packet_t* packet) {
+  packet->report_id = REPORT_ID;
+  packet->cmd_id = CMD_RDY;
+  packet->remote_id = 0;
+  packet->btn_id = 0;
+}
 
 void setup() {
   DLUSB.begin();
   DLUSB.refresh();
-  // DLUSB.write(0xFF);
-  DLUSB.refresh();
+  prep_rdy_packet(&out_buf);
+  DLUSB.write(&out_buf);  
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, HIGH);
-}
-
-void get_input() {
-  // when there are no characters to read
-  while (true) {
-    if (DLUSB.available()) {
-      //something to read
-      // input_buf = DLUSB.read();
-      // DLUSB.write(input_buf);
-      break;
-    }
-    // refresh the usb port
-    DLUSB.refresh();
-    DLUSB.delay(10);
-  }
+  DLUSB.refresh();
 }
 
 void loop() {
-  //DLUSB.refresh();
-
-  get_input();
-
-  if (input_buf > 0) {
-    digitalWrite(LED_BUILTIN, HIGH);
-    livolo.sendButton(LIVOLO_REMOTE_ID, input_buf);
-    DLUSB.refresh();
-    // DLUSB.write(input_buf);
-    DLUSB.delay(100);
-    input_buf = 0;
-    digitalWrite(LED_BUILTIN, LOW);
-  }
-  else {
-    DLUSB.refresh();
-    // DLUSB.write(0xFA);
+  // Read data from host if available
+  if (DLUSB.available()) {
+    if (DLUSB.read(&in_buf)) {
+      digitalWrite(LED_BUILTIN, HIGH);
+      DLUSB.refresh();
+      livolo.sendButton(in_buf.remote_id, in_buf.btn_id);
+      DLUSB.refresh();
+      DLUSB.write(&in_buf);
+      DLUSB.delay(100);
+      digitalWrite(LED_BUILTIN, LOW);
+    }
   }
 
-  DLUSB.delay(10);
+  DLUSB.delay(50);
 }
