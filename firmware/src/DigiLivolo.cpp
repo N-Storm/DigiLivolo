@@ -1,3 +1,5 @@
+
+
 #include <Arduino.h>
 #include <DLUSB.h>
 #include <livolo.h>
@@ -20,7 +22,7 @@ void setup() {
 void get_input() {
   // when there are no characters to read
   while (true) {
-    if(DLUSB.available()){
+    if (DLUSB.available()) {
       //something to read
       input_buf = DLUSB.read();
       // DLUSB.write(input_buf);
@@ -34,7 +36,7 @@ void get_input() {
 
 void loop() {
   //DLUSB.refresh();
-  
+
   get_input();
 
   if (input_buf > 0) {

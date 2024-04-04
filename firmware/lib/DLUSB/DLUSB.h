@@ -26,15 +26,15 @@ struct ring_buffer {
 };
 
 class DLUSBDevice : public Print {
- private:
-  ring_buffer *_rx_buffer;
-  ring_buffer *_tx_buffer;
+private:
+  ring_buffer* _rx_buffer;
+  ring_buffer* _tx_buffer;
 
- public:
-  DLUSBDevice (ring_buffer *rx_buffer, ring_buffer *tx_buffer);
+public:
+  DLUSBDevice(ring_buffer* rx_buffer, ring_buffer* tx_buffer);
 
   void begin();
-    
+
   // TODO: Deprecate update
   void update();
 
@@ -43,7 +43,7 @@ class DLUSBDevice : public Print {
 
   int available();
   int tx_remaining();
-  
+
   int read();
   virtual size_t write(byte c);
   using Print::write;
