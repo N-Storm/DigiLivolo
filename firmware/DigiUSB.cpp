@@ -175,7 +175,7 @@ PROGMEM const uchar usbHidReportDescriptor[38] = {    /* USB report descriptor *
     0xb2, 0x02, 0x01,              //   FEATURE (Data,Var,Abs,Buf)
     0x85, 0x02,                    //   REPORT_ID (2)
     0x09, 0x00,                    //   USAGE (Unassigned)
-    0x95, 0x03,                    //   REPORT_COUNT (1)
+    0x95, 0x03,                    //   REPORT_COUNT (3)
     0x75, 0x08,                    //   REPORT_SIZE (8)
     0xb2, 0x02, 0x01,              //   FEATURE (Data,Var,Abs,Buf)
     0xc0                           // END_COLLECTION
