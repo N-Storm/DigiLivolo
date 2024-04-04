@@ -134,7 +134,7 @@ bool tx_read(dlusb_packet_t* packet) {
 #ifdef __cplusplus
 extern "C" {
 #endif 
-  PROGMEM const uchar usbHidReportDescriptor[38] = {    /* USB report descriptor */
+  PROGMEM const uchar usbHidReportDescriptor[25] = {    /* USB report descriptor */
     0x05, 0x84,                    // USAGE_PAGE (Power Device)
     0x09, 0x6b,                    // USAGE (SwitchOn/Off)
     0xa1, 0x01,                    // COLLECTION (Application)
@@ -162,7 +162,7 @@ extern "C" {
         if (tx_available()) {
           if (tx_read(&packet[0])) {
             usbMsgPtr = (unsigned char*)packet; /* tell the driver which data to return */
-            return sizeof(dlusb_packet_t); /* tell the driver to send 1 byte */
+            return sizeof(dlusb_packet_t); /* tell the driver to send packet */
           }
           else
             return 0;
@@ -174,14 +174,6 @@ extern "C" {
       else if (rq->bRequest == USBRQ_HID_SET_REPORT) {
         /* since we have only one report type, we can ignore the report-ID */
         return USB_NO_MSG;  /* use usbFunctionWrite() to receive data from host */
-
-        // TODO: Check race issues?
-        // store_packet(rq->wValue.bytes[0] * 8, &rx_buffer);
-        // store_packet(rq->wValue.bytes[0], &rx_buffer);
-        // store_packet(rq->wIndex.bytes[0], &rx_buffer);
-        // store_packet(rq->wIndex.bytes[1], &rx_buffer);
-        // store_packet(0xAA, &rx_buffer);
-
       }
     }
     else {
@@ -193,7 +185,8 @@ extern "C" {
   uchar  usbFunctionWrite(uchar* data, uchar len)
   {
     dlusb_packet_t* p = (dlusb_packet_t*)data;
-    if (p->report_id == REPORT_ID && p->cmd_id == CMD_SWITCH && len <= sizeof(dlusb_packet_t))
+    // TODO: Check why len are not <= sizeof(dlusb_packet_t)
+    if (p->report_id == REPORT_ID && p->cmd_id == CMD_SWITCH)
       if (!store_packet(p, &rx_buffer))
         return 0xff; // Return FAIL code
 
