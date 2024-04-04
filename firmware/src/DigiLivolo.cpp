@@ -1,6 +1,6 @@
 #include <Arduino.h>
 #include <DLUSB.h>
-#include <livolo.h>
+#include <Livolo.h>
 #include <stdint.h>
 
 Livolo livolo(PIN_B5); // transmitter connected to pin #5
