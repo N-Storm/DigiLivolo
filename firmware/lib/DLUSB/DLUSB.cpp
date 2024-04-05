@@ -48,8 +48,7 @@ inline bool store_packet(dlusb_packet_t* packet, ring_buffer* the_buffer)
   return false;
 }
 
-DLUSBDevice::DLUSBDevice(ring_buffer* rx_buffer,
-  ring_buffer* tx_buffer) {
+DLUSBDevice::DLUSBDevice(ring_buffer* rx_buffer, ring_buffer* tx_buffer) {
   _rx_buffer = rx_buffer;
   _tx_buffer = tx_buffer;
 }
