@@ -1,6 +1,13 @@
 # DigiLivolo
 
-Firmware (for Digispark Arduino compatible module) & software to control Livolo RF 433 Mhz light switches.
+Firmware for Digispark Arduino compatible module (any probably other AVR parts capable runninng V-USB)
+to control Livolo RF 433 Mhz light switches via USB.
+
+Once flashed, this firmware turns DigiSpark module into USB HID device. Which should have drivers
+shipped with most modern OSes. I.e. no driver will be required.
+
+Device accepts commands from USB Host with Livolo Remote ID & keycode and sends it on radio with
+some kind of 433 MHz dumb OOK/ASK transmitter, like cheap SYN115 modules.
 
 ## Description
 
@@ -31,6 +38,8 @@ Upload firmware to your Digispark module. Connect DATA pin of 433 Mhz transmitte
 were used & confirmed to work by me) to P5 of Digispark module (this pin can be changed in main sketch code).
 Also connect VCC & GND of the module.
 
+![f](https://raw.githubusercontent.com/N-Storm/DigiLivolo/main/wiring.jpg)
+
 Once plugged to USB, the device should be recognized as USB HID device, not requiring any driver as every
 modern OS have this standard USB class driver built-in.
 
@@ -50,6 +59,8 @@ This should send Livolo command as remote ID 0x214d (77,33) and key ID 0x10 (16)
 
 ## Building
 
+### With PlatformIO
+
 ```console
 git checkout --recurse-submodules https://github.com/N-Storm/digiLivolo/
 cd digiLivolo/firmware
@@ -58,10 +69,21 @@ pio run
 
 Or open VSCode workspace after checkout, providing you have VSCode with PlatformIO plugin installed.
 
+### With Arduino IDE
+
+Install [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino) core.
+
+Create new directory `DigiLivolo`, copy `firmware/src/DigiLivolo.cpp` as `DigiLivolo.ino` there.
+
+Copy `DLUSB` and `Livolo` libraries from `firmware/lib` to your Arduino libraries directory.
+
+Open `DigiLivolo.ino` with Arduino IDE, set board to DigiSpark and compile.
+
 ## Software used
 
 * [PlatformIO](https://platformio.org/)
 * [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino)
 * [V-USB](https://www.obdev.at/products/vusb/index.html)
+* [Livolo Arduino library](https://forum.arduino.cc/t/control-livolo-switches-livolo-switch-library/149850)
 * [hidapi](https://github.com/libusb/hidapi)
 * [hidapitester](https://github.com/todbot/hidapitester)
