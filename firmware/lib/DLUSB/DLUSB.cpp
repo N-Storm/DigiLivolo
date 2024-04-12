@@ -29,8 +29,8 @@
 
  // Ring buffer implementation nicked from HardwareSerial.cpp
  // TODO: Don't nick it. :)
-ring_buffer rx_buffer = { { 0 }, 0, 0 };
-ring_buffer tx_buffer = { { 0 }, 0, 0 };
+ring_buffer rx_buffer = { { 0, 0, 0, 0 }, 0, 0 };
+ring_buffer tx_buffer = { { 0, 0, 0, 0 }, 0, 0 };
 
 inline bool store_packet(dlusb_packet_t* packet, ring_buffer* the_buffer)
 {
