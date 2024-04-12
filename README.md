@@ -22,19 +22,12 @@ Library `DLUSB` for the HID USB communications are based on DigiUSB library, inc
 `DigistumpArduino`. It has been modified to allow more than 1 byte communications and other things which
 make whole thing easier.
 
-## Building
-
-```console
-git checkout --recurse-submodules https://github.com/N-Storm/digiLivolo/
-cd digiLivolo/firmware
-pio run
-```
-
-Or open VSCode workspace after checkout, providing you have VSCode with PlatformIO plugin installed.
-
 ## Usage
 
-Compile & upload firmware to Digispark. Connect DATA pin of 433 Mhz transmitter module (SYN115 based modules
+Download compiled firmware from [releases](https://github.com/N-Storm/DigiLivolo/releases) or build from
+sources (see below for instructions).
+
+Upload firmware to your Digispark module. Connect DATA pin of 433 Mhz transmitter module (SYN115 based modules
 were used & confirmed to work by me) to P5 of Digispark module (this pin can be changed in main sketch code).
 Also connect VCC & GND of the module.
 
@@ -54,6 +47,16 @@ Example usage:
 ```hidapitester.exe --vidpid 16c0:05df -l 8 --open --send-feature 76,1,77,33,16```
 
 This should send Livolo command as remote ID 0x214d (77,33) and key ID 0x10 (16).
+
+## Building
+
+```console
+git checkout --recurse-submodules https://github.com/N-Storm/digiLivolo/
+cd digiLivolo/firmware
+pio run
+```
+
+Or open VSCode workspace after checkout, providing you have VSCode with PlatformIO plugin installed.
 
 ## Software used
 
