@@ -1,4 +1,4 @@
-name: Build PlatformIO project
+name: Build firmware
 on:
   # Triggers the workflow on push or pull request events but only for the main branch
   push:
@@ -16,6 +16,8 @@ jobs:
         uses: karniv00l/platformio-run-action@v1
         with:
           project-dir: ./firmware
+          environment: digispark-tiny
+          targets: digispark-micronucleus-6586
           silent: false
           verbose: true
-          disable-auto-clean: false
+          disable-auto-clean: true
