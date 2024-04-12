@@ -1,7 +1,7 @@
 # Improved version of Digistump avr core for Arduino
 Available as Arduino Board Manager entry "Digistump AVR Boards" using the Board Manager URL: https://raw.githubusercontent.com/ArminJo/DigistumpArduino/master/package_digistump_index.json
 
-### [Version 1.7.3 ](https://github.com/ArminJo/DigistumpArduino/archive/master.zip) - work in progress
+### [Version 1.7.5](https://github.com/ArminJo/DigistumpArduino/archive/master.zip) - work in progress
 
 [![TestCompile](https://github.com/ArminJo/DigistumpArduino/workflows/TestCompile/badge.svg)](https://github.com/ArminJo/DigistumpArduino/actions)
 [![Commits since latest](https://img.shields.io/github/commits-since/ArminJo/DigistumpArduino/latest)](https://github.com/ArminJo/DigistumpArduino/commits/master)
