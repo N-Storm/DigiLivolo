@@ -12,22 +12,24 @@ some kind of 433 MHz dumb OOK/ASK transmitter, like cheap SYN115 modules.
 ## Description
 
 Firmware are located inside `firmware` directory. It's supposed to be built with
-[PlatformIO](https://platformio.org/). [VSCode](https://code.visualstudio.com/) preferred.
+[PlatformIO](https://platformio.org/). [VSCode](https://code.visualstudio.com/) with PlatformIO plugin
+are used for development. VSCode workspace file `DigiLivolo.code-workspace` are included and you can
+open it with VSCode. Building project from VSCode are supported if you have PlatformIO plugin installed.
 
-This code has been developed for Digispark module by Digistump. As it has already everything for
-[V-USB](https://www.obdev.at/products/vusb/index.html). But probably would work on any AVR-based Arduino
+Firmware code has been developed for Digispark module by Digistump. As it has already everything for
+[V-USB](https://www.obdev.at/products/vusb/index.html). Probably would work on any AVR-based Arduino
 module. But you'll have to add USB related parts and adjust V-USB config.
 
 I've also included custom Digispark board config `digispark-micronucleus-6586` which are based on the
 default Digispark board, but I've tweaked flash size for recent Micronucleus bootloader.
 
-Because PlatformIO doesn't have latest [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino)
+Because PlatformIO doesn't have the latest [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino)
 framework, I've included one in `firmware/packages/framework-arduino-avr-digistump`. But the firmware
 should compile on standard framework as well.
 
 Library `DLUSB` for the HID USB communications are based on DigiUSB library, included with
-`DigistumpArduino`. It has been modified to allow more than 1 byte communications and other things which
-make whole thing easier.
+`DigistumpArduino`. It has been modified to allow more than 1 byte bidirectional USB communication via
+USB HID Reports. As well as other various improvements.
 
 ## Usage
 
@@ -61,23 +63,25 @@ This should send Livolo command as remote ID 0x214d (77,33) and key ID 0x10 (16)
 
 ### With PlatformIO
 
+Building with PlatformIO installed are simple. Just clone the repo & issue `pio run` from the firmware
+directory.
+
 ```console
-git checkout --recurse-submodules https://github.com/N-Storm/digiLivolo/
-cd digiLivolo/firmware
+git clone --recurse-submodules https://github.com/N-Storm/DigiLivolo
+cd DigiLivolo/firmware
 pio run
 ```
 
-Or open VSCode workspace after checkout, providing you have VSCode with PlatformIO plugin installed.
+Or open VSCode workspace file `DigiLivolo.code-workspace` after cloning the repo if you want to build
+it from there. Requires PlatformIO plugin installed.
 
 ### With Arduino IDE
 
-Install [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino) core.
-
-Create new directory `DigiLivolo`, copy `firmware/src/DigiLivolo.cpp` as `DigiLivolo.ino` there.
-
-Copy `DLUSB` and `Livolo` libraries from `firmware/lib` to your Arduino libraries directory.
-
-Open `DigiLivolo.ino` with Arduino IDE, set board to DigiSpark and compile.
+* Download or clone this repo.
+* Install [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino) core.
+* Create new directory `DigiLivolo`, copy `firmware/src/DigiLivolo.cpp` as `DigiLivolo.ino` there.
+* Copy `DLUSB` and `Livolo` libraries from `firmware/lib` to your Arduino libraries directory.
+* Open `DigiLivolo.ino` with Arduino IDE, set board to DigiSpark and compile/upload.
 
 ## Software used
 
