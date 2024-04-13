@@ -14,35 +14,38 @@
  * License: GNU GPL v2 (see License.txt), GNU GPL v3 or proprietary (CommercialLicense.txt)
  * This Revision: $Id: main.c 692 2008-11-07 15:07:40Z cs $
  */
-
 #include <Arduino.h>
 #include <avr/io.h>
 #include <avr/wdt.h>
-#include <avr/interrupt.h>  /* for sei() */
-#include <util/delay.h>     /* for _delay_ms() */
+#include <avr/interrupt.h>  // for sei()
+#include <util/delay.h>     // for _delay_ms()
 #include <avr/eeprom.h>
-#include <avr/pgmspace.h>   /* required by usbdrv.h */
+#include <avr/pgmspace.h>   // required by usbdrv.h
 #include "usbdrv.h"
-#include "oddebug.h"        /* This is also an example for using debug macros */
+#include "oddebug.h"        // This is also an example for using debug macros
 
 #include "DLUSB.h"
 
- // Ring buffer implementation nicked from HardwareSerial.cpp
- // TODO: Don't nick it. :)
+/* Ring buffer implementation nicked from HardwareSerial.cpp
+ * TODO: Don't nick it. :) */
 ring_buffer rx_buffer = { { 0, 0, 0, 0 }, 0, 0 };
 ring_buffer tx_buffer = { { 0, 0, 0, 0 }, 0, 0 };
 
-inline bool store_packet(dlusb_packet_t* packet, ring_buffer* the_buffer)
+/// @brief Stores packet in the ring buffer.
+/// @param[in] packet stored packet struct
+/// @param[out] buffer pointer to a buffer struct
+/// @return true if success, false if buffer is full
+inline bool store_packet(dlusb_packet_t* packet, ring_buffer* buffer)
 {
-  uint8_t newhead = (the_buffer->head + 1) % RING_BUFFER_SIZE;
+  uint8_t newhead = (buffer->head + 1) % RING_BUFFER_SIZE;
 
-  // if we should be storing the received data into the location
-  // just before the tail (meaning that the head would advance to the
-  // current location of the tail), we're about to overflow the buffer
-  // and so we don't write to the buffer or advance the head.
-  if (newhead != the_buffer->tail && newhead <= RING_BUFFER_SIZE) {
-    memcpy(&the_buffer->buffer[the_buffer->head], packet, sizeof(dlusb_packet_t));
-    the_buffer->head = newhead;
+  /* if we should be storing the received data into the location
+   * just before the tail (meaning that the head would advance to the
+   * current location of the tail), we're about to overflow the buffer
+   * and so we don't write to the buffer or advance the head. */
+  if (newhead != buffer->tail && newhead <= RING_BUFFER_SIZE) {
+    memcpy(&buffer->buffer[buffer->head], packet, sizeof(dlusb_packet_t));
+    buffer->head = newhead;
     return true;
   }
   return false;
@@ -53,6 +56,7 @@ DLUSBDevice::DLUSBDevice(ring_buffer* rx_buffer, ring_buffer* tx_buffer) {
   _tx_buffer = tx_buffer;
 }
 
+/// @brief Initializes USB
 void DLUSBDevice::begin() {
   cli();
 
@@ -61,7 +65,7 @@ void DLUSBDevice::begin() {
   usbDeviceDisconnect();
   uchar   i;
   i = 0;
-  while (--i) {             /* fake USB disconnect for > 250 ms */
+  while (--i) { // fake USB disconnect for > 250 ms
     _delay_ms(10);
   }
   usbDeviceConnect();
@@ -69,16 +73,18 @@ void DLUSBDevice::begin() {
   sei();
 }
 
+/// @brief Calls usbPoll() to process low-level USB stuff
 void DLUSBDevice::refresh() {
   usbPoll();
 }
 
-// wait a specified number of milliseconds (roughly), refreshing in the background
-void DLUSBDevice::delay(long milli) {
+/// @brief Wait a specified number of milliseconds (roughly), refreshing in the background
+/// @param[in] ms delay in milliseconds
+void DLUSBDevice::delay(long ms) {
   unsigned long last = millis();
-  while (milli > 0) {
+  while (ms > 0) {
     unsigned long now = millis();
-    milli -= now - last;
+    ms -= now - last;
     last = now;
     refresh();
   }
@@ -92,6 +98,9 @@ int DLUSBDevice::tx_remaining() {
   return RING_BUFFER_SIZE - (RING_BUFFER_SIZE + _tx_buffer->head - _tx_buffer->tail) % RING_BUFFER_SIZE;
 }
 
+/// @brief Returns next packet from rx_buffer
+/// @param packet[out] pointer to a struct where packet will be copied to
+/// @return true if success, false if there are no new packets in ring buffer available
 bool DLUSBDevice::read(dlusb_packet_t* packet) {
   // if the head isn't ahead of the tail, we don't have any characters
   if (_rx_buffer->head == _rx_buffer->tail) {
@@ -104,6 +113,9 @@ bool DLUSBDevice::read(dlusb_packet_t* packet) {
   }
 }
 
+/// @brief Stores packet to tx_buffer
+/// @param packet[in] pointer to a struct of packet to store
+/// @return true if success, false if buffer is full
 bool DLUSBDevice::write(dlusb_packet_t* packet) {
   return store_packet(packet, _tx_buffer);
 }
@@ -154,14 +166,15 @@ extern "C" {
   {
     usbRequest_t* rq = (usbRequest_t*)((void*)data);
 
-    if ((rq->bmRequestType & USBRQ_TYPE_MASK) == USBRQ_TYPE_CLASS) {    /* HID class request */
-      if (rq->bRequest == USBRQ_HID_GET_REPORT) {  /* wValue: ReportType (highbyte), ReportID (lowbyte) */
-        /* since we have only one report type, we can ignore the report-ID */
-        static dlusb_packet_t packet[1];  /* buffer must stay valid when usbFunctionSetup returns */
+    if ((rq->bmRequestType & USBRQ_TYPE_MASK) == USBRQ_TYPE_CLASS) {    // HID class request
+      // Host requests USB HID REPORT. Data: HOST <- DEVICE
+      if (rq->bRequest == USBRQ_HID_GET_REPORT) {  // wValue: ReportType (highbyte), ReportID (lowbyte)
+        // Since we have only one report type, we can ignore the report-ID
+        static dlusb_packet_t packet[1];  // Buffer must stay valid when usbFunctionSetup returns
         if (tx_available()) {
           if (tx_read(&packet[0])) {
-            usbMsgPtr = (unsigned char*)packet; /* tell the driver which data to return */
-            return sizeof(dlusb_packet_t); /* tell the driver to send packet */
+            usbMsgPtr = (unsigned char*)packet; // Tell the driver which data to return
+            return sizeof(dlusb_packet_t); // Tell the driver to send packet
           }
           else
             return 0;
@@ -170,19 +183,22 @@ extern "C" {
           // Drop through to return 0 (which will stall the request?)
         }
       }
+      // Host sets USB HID REPORT. Data: HOST -> DEVICE
       else if (rq->bRequest == USBRQ_HID_SET_REPORT) {
-        /* since we have only one report type, we can ignore the report-ID */
-        return USB_NO_MSG;  /* use usbFunctionWrite() to receive data from host */
+        // Since we have only one report type, we can ignore the report-ID
+        return USB_NO_MSG;  // use usbFunctionWrite() to receive data from host
       }
     }
     else {
-      /* ignore vendor type requests, we don't use any */
+      // Ignore vendor type requests, we don't use any
     }
     return 0;
   }
 
+  // Called when hosts sends data to device, i.e. device receives HID report
   uchar  usbFunctionWrite(uchar* data, uchar len)
   {
+    // Type cast incoming data to dlusb_packet_t struct
     dlusb_packet_t* p = (dlusb_packet_t*)data;
     // TODO: Check why len are not <= sizeof(dlusb_packet_t)
     if (p->report_id == REPORT_ID && p->cmd_id == CMD_SWITCH)
