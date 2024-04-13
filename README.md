@@ -48,16 +48,17 @@ modern OS have this standard USB class driver built-in.
 To send codes to Livolo switches you can use [hidapitester](https://github.com/todbot/hidapitester) for now.
 Work on the dedicated PC control software are in progress.
 
-USB protocol are simple 8 bytes. First are HID REPORT ID, which are hardcoded to 76 (0x4C). 2nd are CMD ID,
-which is only 0x01 (send code) for now. Next 2 bytes are Livolo Remote ID, little-endian (means you have to
-reverse byte order from "normal" representation). 5th byte are Livolo Key ID. Remaining 3 bytes are reserved
-and not used. They can be left as zeroes.
+USB HID reports size set to 8 bytes. First are the HID REPORT ID, hardcoded to 76 (0x4C) in USB descriptor.
+Second byte are the CMD ID. Only 0x01 (send Livolo code) are suppored for Host to Device reports.
+Next 2 bytes are the Livolo Remote ID, little-endian (means you have to reverse byte order from "normal"
+representation). 5th byte are the Livolo Key code. Remaining 3 bytes are reserved and not used, can be omitted
+in `hidapitester` invocation (will be sent as zeros).
 
 Example usage:
 
 ```hidapitester.exe --vidpid 16c0:05df -l 8 --open --send-feature 76,1,77,33,16```
 
-This should send Livolo command as remote ID 0x214d (77,33) and key ID 0x10 (16).
+This should send Livolo command as remote ID 0x214d (77,33) and key code 0x10 (16).
 
 ## Building
 
