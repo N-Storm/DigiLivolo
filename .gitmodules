@@ -2,5 +2,8 @@
 	path = extra/v-usb
 	url = https://github.com/obdev/v-usb.git
 [submodule "lib/hidapi"]
-	path = extra/hidapi
+	path = software/lib/hidapi
 	url = https://github.com/libusb/hidapi.git
+[submodule "software/lib/argp-standalone"]
+	path = software/lib/argp-standalone
+	url = https://github.com/tom42/argp-standalone.git

@@ -1,0 +1,6 @@
+{
+    "cmake.generator": "Ninja",
+    "cmake.configureArgs": [
+        "-Wno-dev"
+    ]
+}

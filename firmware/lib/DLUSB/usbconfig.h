@@ -200,11 +200,11 @@ section at the end of this file).
  * with libusb: 0x16c0/0x5dc.  Use this VID/PID pair ONLY if you understand
  * the implications!
  */
-#define USB_CFG_DEVICE_VERSION  0x00, 0x01
+#define USB_CFG_DEVICE_VERSION  0x02, 0x01
 /* Version number of the device: Minor number first, then major number.
  */
-#define USB_CFG_VENDOR_NAME     'd','i','g','i','s','t','u','m','p','.','c','o','m'
-#define USB_CFG_VENDOR_NAME_LEN 13
+#define USB_CFG_VENDOR_NAME     'd','i','g','i','l','i','v','o','l','o','@','y','a','n','d','e','x','.','c','o','m'
+#define USB_CFG_VENDOR_NAME_LEN 21
 /* These two values define the vendor name returned by the USB device. The name
  * must be given as a list of characters under single quotes. The characters
  * are interpreted as Unicode (UTF-16) entities.
@@ -215,8 +215,8 @@ section at the end of this file).
  */
 #ifndef USB_CFG_DEVICE_NAME
 
-#define USB_CFG_DEVICE_NAME     'D','i','g','i','U','S','B'
-#define USB_CFG_DEVICE_NAME_LEN 7
+#define USB_CFG_DEVICE_NAME     'D','i','g','i','L','i','v','o','l','o'
+#define USB_CFG_DEVICE_NAME_LEN 10
  
  #endif
 /* Same as above for the device name. If you don't want a device name, undefine

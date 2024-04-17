@@ -60,7 +60,7 @@ Example usage:
 
 This should send Livolo command as remote ID 0x214d (77,33) and key code 0x10 (16).
 
-## Building
+## Building firmware
 
 ### With PlatformIO
 
@@ -84,7 +84,7 @@ it from there. Requires PlatformIO plugin installed.
 * Copy `DLUSB` and `Livolo` libraries from `firmware/lib` to your Arduino libraries directory.
 * Open `DigiLivolo.ino` with Arduino IDE, set board to DigiSpark and compile/upload.
 
-## Software used
+## Software & libraries used
 
 * [PlatformIO](https://platformio.org/)
 * [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino)
@@ -92,3 +92,4 @@ it from there. Requires PlatformIO plugin installed.
 * [Livolo Arduino library](https://forum.arduino.cc/t/control-livolo-switches-livolo-switch-library/149850)
 * [hidapi](https://github.com/libusb/hidapi)
 * [hidapitester](https://github.com/todbot/hidapitester)
+* [argp-standalone](https://github.com/tom42/argp-standalone)

@@ -25,7 +25,7 @@
 #define CMD_RDY 0x10 // OUT, device ready command
 #define CMD_FAIL_BIT (uint8_t)(1 << 7) // Not used
 
-typedef struct {
+typedef struct dlusb_packet {
   uint8_t report_id;
   uint8_t cmd_id;
   uint16_t remote_id;

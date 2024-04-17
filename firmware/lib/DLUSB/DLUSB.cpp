@@ -213,5 +213,3 @@ extern "C" {
 #endif
 
 DLUSBDevice DLUSB = DLUSBDevice(&rx_buffer, &tx_buffer);
-
-

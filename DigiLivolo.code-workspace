@@ -4,8 +4,15 @@
 			"path": "firmware"
 		},
 		{
+			"path": "software"
+		},
+		{
 			"path": "."
 		}
 	],
-	"settings": {}
+	"settings": {
+		"files.associations": {
+			"git_version.h": "c"
+		}
+	}
 }
