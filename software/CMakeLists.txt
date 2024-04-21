@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
 set(PROJECT_NAME "digilivolo")
 project(${PROJECT_NAME} C)
 
-set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -std=gnu11 -flto -ffunction-sections -fdata-sections -Wall -Wl,--warn-common -Wl,--gc-sections -Wl,-lm")
+set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -std=gnu11 -flto -ffunction-sections -fdata-sections -ffat-lto-objects -Wall -Wl,--warn-common -Wl,--gc-sections")
 set(HIDAPI_WITH_LIBUSB FALSE)
 set(BUILD_SHARED_LIBS FALSE) # HIDAPI as static library on all platforms
 

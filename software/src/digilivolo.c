@@ -1,9 +1,13 @@
+/* Part of the DigiLivolo control software.
+ * https://github.com/N-Storm/DigiLivolo/ */
+
 #include <stdio.h>
 #include <wchar.h>
 #include <string.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <stdint.h>
+
 #include <hidapi.h>
 
 #include "git_version.h"
@@ -29,8 +33,7 @@ static struct argp_option options[] = {
 };
 
 // [argp] Command-line arguments.
-struct arguments
-{
+struct arguments {
 	uint16_t remote_id;
 	uint8_t key_id;
 	bool verbose;
@@ -85,8 +88,9 @@ void print_device_details(struct hid_device_info* cur_dev) {
 }
 
 void print_device(struct hid_device_info* cur_dev) {
-	printf("VID/PID: 0x%04hx:0x%04hx, Product: %ls, FW Ver: %d.%02d, Manufacturer: %ls\n", cur_dev->vendor_id, cur_dev->product_id, cur_dev->product_string, \
-																						cur_dev->release_number >> 8, cur_dev->release_number & 0xFF, cur_dev->manufacturer_string);
+	printf("VID/PID: 0x%04hx:0x%04hx, Product: %ls, Manufacturer: %ls, FW Ver: %d.%02d.\n", \
+		cur_dev->vendor_id, cur_dev->product_id, cur_dev->product_string, cur_dev->manufacturer_string, \
+		cur_dev->release_number >> 8, cur_dev->release_number & 0xFF);
 }
 
 void print_devices(struct hid_device_info* cur_dev) {
@@ -173,7 +177,7 @@ int main(int argc, char* argv[])
 {
 	int res;
 	unsigned char buf[9];
-	hid_device* handle;
+	hid_device* handle = NULL;
 	int i;
 
 	struct hid_device_info *devs, *dev;

@@ -14,12 +14,14 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
       - name: Build PlatformIO project
         uses: karniv00l/platformio-run-action@v1
         with:
           project-dir: firmware
           environments: digispark-tiny
           disable-auto-clean: true
+
       - name: Make and upload release
         uses: softprops/action-gh-release@v2
         if: startsWith(github.ref, 'refs/tags/')

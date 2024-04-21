@@ -33,8 +33,15 @@ USB HID Reports. As well as other various improvements.
 
 ## Usage
 
-Download compiled firmware from [releases](https://github.com/N-Storm/DigiLivolo/releases) or build from
+Download compiled firmware from [releases page](https://github.com/N-Storm/DigiLivolo/releases) or build from
 sources (see below for instructions).
+
+Software binaries for Linux/Windows x86_64 can be downloaded from
+[releases page](https://github.com/N-Storm/DigiLivolo/releases) as well. Instructions for building from
+sources are provided below.
+
+_A more generic tool - [hidapitester](https://github.com/todbot/hidapitester) could be used to control device_
+_as well._
 
 Upload firmware to your Digispark module. Connect DATA pin of 433 Mhz transmitter module (SYN115 based modules
 were used & confirmed to work by me) to P5 of Digispark module (this pin can be changed in main sketch code).
@@ -45,20 +52,56 @@ Also connect VCC & GND of the module.
 Once plugged to USB, the device should be recognized as USB HID device, not requiring any driver as every
 modern OS have this standard USB class driver built-in.
 
-To send codes to Livolo switches you can use [hidapitester](https://github.com/todbot/hidapitester) for now.
-Work on the dedicated PC control software are in progress.
+To send ON/OFF codes to Livolo switches with the `digilivolo` software you need to provide it with
+Livolo Remote ID and key code as positional arguments:
 
-USB HID reports size set to 8 bytes. First are the HID REPORT ID, hardcoded to 76 (0x4C) in USB descriptor.
-Second byte are the CMD ID. Only 0x01 (send Livolo code) are suppored for Host to Device reports.
-Next 2 bytes are the Livolo Remote ID, little-endian (means you have to reverse byte order from "normal"
-representation). 5th byte are the Livolo Key code. Remaining 3 bytes are reserved and not used, can be omitted
-in `hidapitester` invocation (will be sent as zeros).
+```shell
+Usage: digilivolo [OPTION...] REMOTE_ID KEY_ID
+
+Software to control DigiLivolo devices.
+
+ Positional arguments:
+  KEY_ID                     Livilo Key ID (1-255)
+  REMOTE_ID                  Livilo Remote ID (1-65535)
+
+ Options:
+  -v, --verbose              Produce verbose output
+
+  -?, --help                 Give this help list
+      --usage                Give a short usage message
+```
+
+REMOTE_ID and KEY_ID can be specified either as deciman numbers or hex numbers if preceeded by `'0x'`.
+
+Examples:
+
+```shell
+#  Remote ID 0x214d (8525) and key code 0x10 (16).
+./digilivolo 0x214d 0x10
+
+# Same in decimal numbers:
+./digilivolo 8525 16
+```
+
+### Using from hidapitester
+
+You can use [hidapitester](https://github.com/todbot/hidapitester) to communicate with device instead. It's a
+generic tool for HID devices which allows to send or read feature reports which is the way to communicate with
+the device.
 
 Example usage:
 
-```hidapitester.exe --vidpid 16c0:05df -l 8 --open --send-feature 76,1,77,33,16```
+```shell
+hidapitester --vidpid 16c0:05df -l 8 --open --send-feature 76,1,77,33,16
+```
 
 This should send Livolo command as remote ID 0x214d (77,33) and key code 0x10 (16).
+
+USB HID reports size set to 8 bytes. First are the HID REPORT ID, hardcoded to 76 (0x4C) in the USB descriptor.
+Second byte are the CMD ID (command ID). Currently only one command 0x01 (send Livolo code) are suppored
+for Host to Device reports. Next 2 bytes are the Livolo Remote ID, little-endian (means you have to reverse
+byte order from "normal" representation). 5th byte are the Livolo Key code. Remaining 3 bytes are reserved and
+not used, can be omitted in `hidapitester` invocation (will be sent as zeros).
 
 ## Building firmware
 
@@ -67,7 +110,7 @@ This should send Livolo command as remote ID 0x214d (77,33) and key code 0x10 (1
 Building with PlatformIO installed are simple. Just clone the repo & issue `pio run` from the firmware
 directory.
 
-```console
+```shell
 git clone --recurse-submodules https://github.com/N-Storm/DigiLivolo
 cd DigiLivolo/firmware
 pio run
@@ -83,6 +126,22 @@ it from there. Requires PlatformIO plugin installed.
 * Create new directory `DigiLivolo`, copy `firmware/src/DigiLivolo.cpp` as `DigiLivolo.ino` there.
 * Copy `DLUSB` and `Livolo` libraries from `firmware/lib` to your Arduino libraries directory.
 * Open `DigiLivolo.ino` with Arduino IDE, set board to DigiSpark and compile/upload.
+
+## Building software
+
+From the `DigiLivolo/software` directory:
+
+```shell
+cmake -Wno-dev -B ./build . && cmake --build ./build
+```
+
+For building on Windows [MSYS2](https://www.msys2.org/) UCRT64 has been tested to work.
+
+Resulting binary should be compiled as `build/digilivolo[.exe]`.
+
+By default project compiles with `hidapi` library built from sources (linked as a git submodule) and
+statically linked. If you wish to use system installed `hidapi` library and you have dev files (headers, etc)
+installed, add `-DUSE_SYSTEM_HIDAPI=true` option to first cmake command on the example above.
 
 ## Software & libraries used
 
