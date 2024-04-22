@@ -48,7 +48,7 @@ jobs:
       id: strings
       shell: bash
       run: |
-        echo "build-output-dir=${{ github.workspace }}/software/build" >> "$GITHUB_OUTPUT"
+        echo "build-output-dir=${{ github.workspace }}/software/build" | sed -E 's/\\/\//g' >> "$GITHUB_OUTPUT"
 
     - name: Install Ninja
       id: ninja
