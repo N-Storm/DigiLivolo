@@ -10,29 +10,23 @@ on:
 
 jobs:
   build:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.sys.os }}
 
     strategy:
       # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
       fail-fast: false
 
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        sys:
+          - { os: ubuntu-latest,  shell: bash, c_compiler: gcc, binary_orig: digilivolo, binary_target: digilivolo-linux-x86_64 }
+          - { os: ubuntu-latest,  shell: bash, c_compiler: clang }
+          - { os: windows-latest, shell: 'msys2 {0}', c_compiler: gcc, binary_orig: digilivolo.exe, binary_target: digilivolo-win-x86_64.exe }
+          - { os: windows-latest, shell: pwsh, c_compiler: gcc }
+          - { os: windows-latest,  shell: pwsh, c_compiler: clang }
         build_type: [Release]
-        c_compiler: [gcc, clang]
-        include:
-          - os: windows-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: windows-latest
-            c_compiler: clang
-            cpp_compiler: clang++
-          - os: ubuntu-latest
-            c_compiler: gcc
-            cpp_compiler: g++
-          - os: ubuntu-latest
-            c_compiler: clang
-            cpp_compiler: clang++
+    defaults:
+      run:
+        shell: ${{ matrix.sys.shell }}
 
     steps:
     - uses: ConorMacBride/install-package@v1
@@ -43,51 +37,51 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: Set reusable strings
-      # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
-      id: strings
-      shell: bash
-      run: |
-        echo "build-output-dir=${{ github.workspace }}/software/build" | sed -E 's/\\/\//g' >> "$GITHUB_OUTPUT"
-
     - name: Install Ninja
+      if: matrix.sys.shell != 'msys2 {0}'
       id: ninja
       uses: turtlesec-no/get-ninja@main
 
+    - name: 'Setup MSYS2'
+      if: matrix.sys.shell == 'msys2 {0}'
+      uses: msys2/setup-msys2@v2
+      with:
+        msystem: UCRT64
+        update: true
+        install: >-
+          git
+          make
+          mingw-w64-ucrt-x86_64-gcc
+        pacboy: >-
+          toolchain:p
+          cmake:p
+          ninja:p
+
     - name: Configure CMake
       run: >
-        cmake -B ${{ steps.strings.outputs.build-output-dir }}
-        -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
-        -DCMAKE_C_COMPILER=${{ matrix.c_compiler }}
+        cmake -B software/build
+        -DCMAKE_C_COMPILER=${{ matrix.sys.c_compiler }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DUSE_SYSTEM_HIDAPI=false
         -G Ninja
-        -S ${{ github.workspace }}/software
+        -S software
 
     - name: Build
-      run: cmake --build ${{ steps.strings.outputs.build-output-dir }}
+      run: cmake --build software/build
 
-    - name: Copy Linux binary
-      if: startsWith(matrix.os, 'ubuntu') && matrix.c_compiler == 'gcc'
+    - name: Rename binary
+      if: ${{ matrix.sys.binary_target != '' }}
       shell: bash
       run: |
-        cp ${{ steps.strings.outputs.build-output-dir }}/digilivolo ${{ steps.strings.outputs.build-output-dir }}/digilivolo-linux-x86_64
-        ls -l ${{ steps.strings.outputs.build-output-dir }}/digilivolo-linux-x86_64
-        file ${{ steps.strings.outputs.build-output-dir }}/digilivolo-linux-x86_64
-
-    - name: Copy Windows binary
-      if: startsWith(matrix.os, 'windows') && matrix.c_compiler == 'gcc'
-      run: |
-        copy ${{ steps.strings.outputs.build-output-dir }}\digilivolo.exe ${{ steps.strings.outputs.build-output-dir }}\digilivolo-win-x86_64.exe
-        dir ${{ steps.strings.outputs.build-output-dir }}\digilivolo-win-x86_64.exe
+        mv software/build/${{ matrix.sys.binary_orig }} software/build/${{ matrix.sys.binary_target }}
+        ls -l software/build/${{ matrix.sys.binary_target }}
+        file software/build/${{ matrix.sys.binary_target }}
 
     - name: Make and upload release
       uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/')
+      if: startsWith(github.ref, 'refs/tags/') && matrix.sys.binary_target != ''
       with:
         fail_on_unmatched_files: false
         generate_release_notes: true        
         make_latest: true
-        files: |
-          ${{ steps.strings.outputs.build-output-dir }}/digilivolo-linux-x86_64
-          ${{ steps.strings.outputs.build-output-dir }}/digilivolo-win-x86_64.exe
+        files: software/build/${{ matrix.sys.binary_target }}
