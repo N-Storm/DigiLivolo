@@ -44,7 +44,7 @@ jobs:
         apt -y full-upgrade || yum update -y
         apt install -y sudo git dialog python3 python3-pip python3-setuptools curl wget || yum install -y sudo git dialog python3 python3-pip python3-setuptools ninja-build make cmake3 libusb-devel libudev-devel curl wget
         git --version
-        git config --global --add safe.directory /__w/dl/dl
+        git config --global --add safe.directory /__w/DigiLivolo/DigiLivolo
         echo
         cat /etc/os-release
 
