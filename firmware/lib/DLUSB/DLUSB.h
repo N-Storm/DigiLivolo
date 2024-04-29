@@ -1,9 +1,15 @@
-/*
+/* Name: DLUSB.h
+ * Part of the DigiLivolo firmware.
+ * https://github.com/N-Storm/DigiLivolo/ 
+ * Copyright (c) 2024 GitHub user N-Storm.
+ * 
  * Based on DigiUSB library from Digistump Arduino: https://github.com/ArminJo/DigistumpArduino
- * Based on Obdev's AVRUSB code and under the same license.
+ * Based on Obdev's AVRUSB code.
  *
- * TODO: Make a proper file header. :-)
+ * License: GNU GPL v3 or later
+ * SPDX-License-Identifier: GPL-3.0-or-later
  */
+
 #ifndef __DLUSB_h__
 #define __DLUSB_h__
 

@@ -1,8 +1,11 @@
 #!/bin/bash
 # Part of the DigiLivolo control software.
 # https://github.com/N-Storm/DigiLivolo/
+#
 # Builds project from sources with a cmake.
 # If called with an argument "full" (build.sh full), does a full rebuild.
+#
+# SPDX-License-Identifier: GPL-3.0-or-later
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 

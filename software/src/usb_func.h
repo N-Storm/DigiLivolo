@@ -18,9 +18,16 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#ifndef GIT_VERSION_H
-#define GIT_VERSION_H
+#ifndef __usb_func_h__
+#define __usb_func_h__
 
-#define GIT_VERSION "@GIT_VERSION@"
+#include <wchar.h>
+#include <hidapi.h>
 
-#endif // GIT_VERSION_H
+extern const char* hid_bus_name(hid_bus_type bus_type);
+extern void print_device_details(struct hid_device_info* cur_dev);
+extern void print_device(struct hid_device_info* cur_dev);
+extern void print_devices(struct hid_device_info* cur_dev);
+extern struct hid_device_info* find_digilivolo(struct hid_device_info* cur_dev);
+
+#endif // __usb_func_h__

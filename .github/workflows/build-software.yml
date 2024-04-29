@@ -22,7 +22,7 @@ jobs:
           - { os: ubuntu-latest,  shell: bash, c_compiler: clang }
           - { os: windows-latest, shell: 'msys2 {0}', c_compiler: gcc, binary_orig: digilivolo.exe, binary_target: digilivolo-win-x86_64.exe }
           - { os: windows-latest, shell: pwsh, c_compiler: gcc }
-          - { os: windows-latest,  shell: pwsh, c_compiler: clang }
+          - { os: windows-latest, shell: pwsh, c_compiler: clang }
         build_type: [Release]
     defaults:
       run:

@@ -4,7 +4,6 @@
   Released into the public domain.
   
   01/12/2013 - code optimization, thanks Maarten! http://forum.arduino.cc/index.php?topic=153525.msg1489857#msg1489857
-  
 */
 
 #include "Arduino.h"

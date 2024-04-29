@@ -1,5 +1,22 @@
 /* Part of the DigiLivolo control software.
- * https://github.com/N-Storm/DigiLivolo/ */
+ * https://github.com/N-Storm/DigiLivolo/ 
+ * Copyright (c) 2024 GitHub user N-Storm.
+ * 
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful, but 
+ * WITHOUT ANY WARRANTY; without even the implied warranty of 
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License 
+ * along with this program. If not, see <http://www.gnu.org/licenses/>.
+ *
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ */
 
 #include <stdio.h>
 #include <wchar.h>
@@ -8,167 +25,11 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include "digilivolo.h"
+#include "args.h"
+
 #include <hidapi.h>
-
-#include "git_version.h"
-#include <argp.h>
-
-// [argp] Program documentation.
-// const char* argp_program_version = GIT_VERSION;
-const char prognamever[] = "digilivolo " GIT_VERSION;
-const char doc[] = "\nSoftware to control DigiLivolo devices.\n";
-const char* argp_program_bug_address = "https://github.com/N-Storm/DigiLivolo/";
-
-// [argp] A description of the arguments we accept.
-static char args_doc[] = "REMOTE_ID KEY_ID";
-
-// [argp] The options we understand.
-static struct argp_option options[] = {
-  {0,             0,   0,                            0, "Positional arguments:"      },
-  {"REMOTE_ID",   0,   0, OPTION_DOC | OPTION_NO_USAGE, "Livilo Remote ID (1-65535)" },
-  {"KEY_ID",      0,   0, OPTION_DOC | OPTION_NO_USAGE, "Livilo Key ID (1-255)"      },
-  {0,             0,   0,                            0, "Options:"                   },
-  {"verbose",   'v',   0,                            0, "Produce verbose output"     },
-  { 0 }
-};
-
-// [argp] Command-line arguments.
-struct arguments {
-	uint16_t remote_id;
-	uint8_t key_id;
-	bool verbose;
-} arguments;
-
-#define DIGILIVOLO_VID 0x16c0
-#define DIGILIVOLO_PID 0x05df
-#define DIGILIVOLO_MANUFACTURER_STRING L"digilivolo@yandex.com"
-#define DIGILIVOLO_PRODUCT_STRING L"DigiLivolo"
-
-#define REPORT_ID 0x4c
-
-#define CMD_SWITCH 0x01 // IN,OUT send Livolo keycode command or send ACK to the host
-#define CMD_RDY 0x10 // OUT, device ready command
-
-// Fallback/example
-#ifndef HID_API_MAKE_VERSION
-#define HID_API_MAKE_VERSION(mj, mn, p) (((mj) << 24) | ((mn) << 8) | (p))
-#endif
-#ifndef HID_API_VERSION
-#define HID_API_VERSION HID_API_MAKE_VERSION(HID_API_VERSION_MAJOR, HID_API_VERSION_MINOR, HID_API_VERSION_PATCH)
-#endif
-
-const char* hid_bus_name(hid_bus_type bus_type) {
-	static const char* const HidBusTypeName[] = {
-		"Unknown",
-		"USB",
-		"Bluetooth",
-		"I2C",
-		"SPI",
-	};
-
-	if ((int)bus_type < 0)
-		bus_type = HID_API_BUS_UNKNOWN;
-	if ((int)bus_type >= (int)(sizeof(HidBusTypeName) / sizeof(HidBusTypeName[0])))
-		bus_type = HID_API_BUS_UNKNOWN;
-
-	return HidBusTypeName[bus_type];
-}
-
-void print_device_details(struct hid_device_info* cur_dev) {
-	printf("Device 0x%04hx:0x%04hx found:\n", cur_dev->vendor_id, cur_dev->product_id);
-	printf("  Path:          %s\n", cur_dev->path);
-	printf("  Manufacturer:  %ls\n", cur_dev->manufacturer_string);
-	printf("  Product:       %ls\n", cur_dev->product_string);
-	printf("  Serial Number: %ls\n", cur_dev->serial_number);
-	printf("  Release:       %hx\n", cur_dev->release_number);
-	printf("  Interface:     %d\n", cur_dev->interface_number);
-	printf("  Usage (page):  0x%hx (0x%hx)\n", cur_dev->usage, cur_dev->usage_page);
-	printf("  Bus type:      %d (%s)\n", cur_dev->bus_type, hid_bus_name(cur_dev->bus_type));
-	printf("\n");
-}
-
-void print_device(struct hid_device_info* cur_dev) {
-	printf("VID/PID: 0x%04hx:0x%04hx, Product: %ls, Manufacturer: %ls, FW Ver: %d.%02d.\n", \
-		cur_dev->vendor_id, cur_dev->product_id, cur_dev->product_string, cur_dev->manufacturer_string, \
-		cur_dev->release_number >> 8, cur_dev->release_number & 0xFF);
-}
-
-void print_devices(struct hid_device_info* cur_dev) {
-	for (; cur_dev; cur_dev = cur_dev->next) {
-		print_device(cur_dev);
-	}
-}
-
-struct hid_device_info* find_digilivolo(struct hid_device_info* cur_dev) {
-	for (; cur_dev; cur_dev = cur_dev->next) {
-		if ( (wcscmp(cur_dev->manufacturer_string, DIGILIVOLO_MANUFACTURER_STRING) == 0) && \
-		     (wcscmp(cur_dev->product_string, DIGILIVOLO_PRODUCT_STRING) == 0) )
-				return cur_dev;
-	}
-
-    return NULL;
-}
-
-// [argp] Parse a single option.
-static error_t parse_opt(int key, char* arg, struct argp_state* state)
-{
-	/* Get the input argument from argp_parse, which we
-	 * know is a pointer to our arguments structure. */
-	struct arguments* arguments = state->input;
-
-	switch (key) {
-	case 'v':
-		arguments->verbose = true;
-		break;
-
-	case ARGP_KEY_ARG:
-		if (state->arg_num >= 2)
-			// Too many arguments.
-			argp_usage(state);
-
-		char* endptr;
-		// Convert argument to long
-		long value = strtol(arg, &endptr, 0);
-		// Check if it was valid long value
-		if (*endptr == '\0') {
-			switch (state->arg_num) {
-			case 0:
-				// Out of range
-				if (value > 65535 || value <= 0)
-					argp_usage(state);
-				else
-					arguments->remote_id = (uint16_t)value;
-				break;
-
-			case 1:
-				// Out of range
-				if (value > 255 || value <= 0)
-					argp_usage(state);
-				else
-					arguments->key_id = (uint8_t)value;
-				break;
-
-			default:
-				return ARGP_ERR_UNKNOWN;
-			}
-		}
-		else
-			// REMOTE_ID or KEY_ID not an unsigned integer
-			argp_usage(state);
-
-		break;
-
-	case ARGP_KEY_END:
-		if (state->arg_num < 2)
-			// Not enough arguments.
-			argp_usage(state);
-		break;
-
-	default:
-		return ARGP_ERR_UNKNOWN;
-	}
-	return 0;
-}
+#include "usb_func.h"
 
 // [argp] Our argp parser.
 static struct argp argp = { options, parse_opt, args_doc, doc };
@@ -180,7 +41,7 @@ int main(int argc, char* argv[])
 	hid_device* handle = NULL;
 	int i;
 
-	struct hid_device_info *devs, *dev;
+	struct hid_device_info *devices, *dl_dev;
 
 	// [argp] Default values.
 	arguments.remote_id = 0;
@@ -208,32 +69,37 @@ int main(int argc, char* argv[])
 	hid_darwin_set_open_exclusive(0);
 	#endif
 
-	devs = hid_enumerate(DIGILIVOLO_VID, DIGILIVOLO_PID);
-	dev = find_digilivolo(devs);
-	if (!dev) {
+	devices = hid_enumerate(DIGILIVOLO_VID, DIGILIVOLO_PID);
+	dl_dev = find_digilivolo(devices);
+	if (!dl_dev) {
 		printf("ERROR: unable to find device\n");
-    	if (arguments.verbose) {
-			printf("All devices with matching VID & PID:\n");
-			print_devices(devs);
-		}
+		if (arguments.verbose)
+			if (devices) {
+				printf("Devices with matching VID/PID (0x%04x:0x%04x), but wrong product or manufacturer string:\n", DIGILIVOLO_VID, DIGILIVOLO_PID);
+				print_devices(devices);
+			}
+			else {
+				hid_free_enumeration(devices);
+				devices = hid_enumerate(0, 0);
+				printf("All enumerated devices, but none of them match VID/PID (0x%04x:0x%04x):\n", DIGILIVOLO_VID, DIGILIVOLO_PID);
+				print_devices(devices);
+			}
 	}
 	else {
 		if (arguments.verbose) {
 			printf("Device found: ");
-			print_device(dev);
-			printf("Opening device path: %s\n", dev->path);
+			print_device(dl_dev);
+			printf("Opening device path: %s\n", dl_dev->path);
 		}
-		handle = hid_open_path(dev->path);
+		handle = hid_open_path(dl_dev->path);
 	}
 
-
-	hid_free_enumeration(devs);
+	hid_free_enumeration(devices);
 
 	// Set up the command buffer.
 	memset(buf, 0x00, sizeof(buf));
 
 	// Open the device using VID & PID
-	// handle = hid_open(DIGILIVOLO_VID, DIGILIVOLO_PID, NULL);
 	if (!handle) {
 		printf("ERROR: unable to open device\n");
 		hid_exit();
