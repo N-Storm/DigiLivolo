@@ -1,7 +1,7 @@
 # DigiLivolo
 
-[![Build firmware](https://github.com/N-Storm/DigiLivolo/actions/workflows/build-firmware-platformio.yml/badge.svg?branch=main)](https://github.com/N-Storm/DigiLivolo/actions/workflows/build-firmware-platformio.yml)
-[![Build DigiLivolo software](https://github.com/N-Storm/DigiLivolo/actions/workflows/build-software-cmake.yml/badge.svg?branch=main)](https://github.com/N-Storm/DigiLivolo/actions/workflows/build-software-cmake.yml)
+[![Build firmware](https://github.com/N-Storm/DigiLivolo/actions/workflows/build-firmware.yml/badge.svg?branch=main)](https://github.com/N-Storm/DigiLivolo/actions/workflows/build-firmware.yml)
+[![Build DigiLivolo software](https://github.com/N-Storm/DigiLivolo/actions/workflows/build-software.yml/badge.svg?branch=main)](https://github.com/N-Storm/DigiLivolo/actions/workflows/build-software.yml)
 
 Firmware for Digispark Arduino compatible module (any probably other AVR parts capable runninng V-USB)
 to control Livolo RF 433 Mhz light switches via USB.
