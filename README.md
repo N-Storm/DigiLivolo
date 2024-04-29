@@ -39,7 +39,7 @@ USB HID Reports. As well as other various improvements.
 Download compiled firmware from [releases page](https://github.com/N-Storm/DigiLivolo/releases) or build from
 sources (see below for instructions).
 
-Software binaries for Linux/Windows x86_64 can be downloaded from
+Software binaries for Windows x64, Linux x86_64 and ARM can be downloaded from
 [releases page](https://github.com/N-Storm/DigiLivolo/releases) as well. Instructions for building from
 sources are provided below.
 
@@ -135,8 +135,10 @@ it from there. Requires PlatformIO plugin installed.
 From the `DigiLivolo/software` directory:
 
 ```shell
-cmake -Wno-dev -B ./build . && cmake --build ./build
+cmake -DCMAKE_BUILD_TYPE=Release -Wno-dev -B ./build . && cmake --build ./build
 ```
+
+Or simply run `bash build.sh` script from this directory.
 
 For building on Windows [MSYS2](https://www.msys2.org/) UCRT64 has been tested to work.
 

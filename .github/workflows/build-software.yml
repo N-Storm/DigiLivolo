@@ -7,10 +7,12 @@ on:
       - "v*.*.*"
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 jobs:
   build:
     runs-on: ${{ matrix.sys.os }}
+    container: ${{ matrix.sys.container }}
 
     strategy:
       # Set fail-fast to false to ensure that feedback is delivered for all matrix combinations. Consider changing this to true when your workflow is stable.
@@ -18,31 +20,54 @@ jobs:
 
       matrix:
         sys:
-          - { os: ubuntu-latest,  shell: bash, c_compiler: gcc, binary_orig: digilivolo, binary_target: digilivolo-linux-x86_64 }
-          - { os: ubuntu-latest,  shell: bash, c_compiler: clang }
-          - { os: windows-latest, shell: 'msys2 {0}', c_compiler: gcc, binary_orig: digilivolo.exe, binary_target: digilivolo-win-x86_64.exe }
-          - { os: windows-latest, shell: pwsh, c_compiler: gcc }
-          - { os: windows-latest, shell: pwsh, c_compiler: clang }
+          - { os: ubuntu-latest, container: 'ghcr.io/phusion/holy-build-box/hbb-64', shell: bash       , c_compiler: gcc    , binary_orig: digilivolo }
+          - { os: ubuntu-latest, container: 'debian:10'                            , shell: bash       , c_compiler: gcc    , binary_orig: digilivolo }
+          - { os: ubuntu-20.04                                                     , shell: bash       , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-x86_64 }
+          - { os: ubuntu-latest, container: 'debian'                               , shell: bash       , crosscompile: armhf, binary_orig: digilivolo    , binary_release: digilivolo-linux-armhf }
+          - { os: ubuntu-latest, container: 'debian'                               , shell: bash       , crosscompile: arm64, binary_orig: digilivolo    , binary_release: digilivolo-linux-arm64 }
+          - { os: ubuntu-20.04                                                     , shell: bash       , c_compiler: clang  , binary_orig: digilivolo }
+          - { os: windows-latest                                                   , shell: 'msys2 {0}', c_compiler: gcc    , binary_orig: digilivolo.exe, binary_release: digilivolo-win-x86_64.exe }
+          - { os: windows-latest                                                   , shell: pwsh       , c_compiler: gcc    , binary_orig: digilivolo.exe }
+          - { os: windows-latest                                                   , shell: pwsh       , c_compiler: clang  , binary_orig: digilivolo.exe }
         build_type: [Release]
+
     defaults:
       run:
         shell: ${{ matrix.sys.shell }}
 
     steps:
-    - uses: ConorMacBride/install-package@v1
+
+    - name: Install required prerequisite packages on the container and configure git
+      if: matrix.sys.container != ''
+      run: |
+        apt update || yum -y install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
+        apt -y full-upgrade || yum update -y
+        apt install -y sudo git dialog python3 python3-pip python3-setuptools curl wget || yum install -y sudo git dialog python3 python3-pip python3-setuptools ninja-build make cmake3 libusb-devel libudev-devel curl wget
+        git --version
+        git config --global --add safe.directory /__w/dl/dl
+        echo
+        cat /etc/os-release
+
+    - name: Install packages required for the workflow and build deps
+      uses: ConorMacBride/install-package@v1
+      if: matrix.sys.container != 'ghcr.io/phusion/holy-build-box/hbb-64'
       with:
-        apt: libudev-dev
-          
-    - uses: actions/checkout@v4
+        apt: libudev-dev sudo gcc cmake build-essential make sudo libusb-dev libc6-dev pkg-config file ninja-build clang
+
+    - name: Checkout repo
+      uses: actions/checkout@v3
       with:
         submodules: 'recursive'
 
+    - name: '[HBB] Create symlink cmake -> cmake3'
+      if: matrix.sys.container == 'ghcr.io/phusion/holy-build-box/hbb-64'
+      run: ln -s /usr/bin/cmake3 /usr/bin/cmake
+
     - name: Install Ninja
-      if: matrix.sys.shell != 'msys2 {0}'
-      id: ninja
+      if: matrix.sys.shell == 'pwsh'
       uses: turtlesec-no/get-ninja@main
 
-    - name: 'Setup MSYS2'
+    - name: Setup MSYS2 UCRT64
       if: matrix.sys.shell == 'msys2 {0}'
       uses: msys2/setup-msys2@v2
       with:
@@ -57,31 +82,53 @@ jobs:
           cmake:p
           ninja:p
 
-    - name: Configure CMake
+    - name: Install cross compiling toolchain and deps
+      if: ${{ matrix.sys.crosscompile != '' }}
+      shell: bash
+      run: |
+        echo "Installing cross toolchain for ${{ matrix.sys.crosscompile }}"
+        sudo dpkg --add-architecture ${{ matrix.sys.crosscompile }}
+        sudo apt update
+        sudo apt install -y crossbuild-essential-${{ matrix.sys.crosscompile }}
+        sudo apt install -y libudev-dev:${{ matrix.sys.crosscompile }} libusb-dev:${{ matrix.sys.crosscompile }} libc6-dev:${{ matrix.sys.crosscompile }} pkg-config:${{ matrix.sys.crosscompile }}
+
+    - name: Configure CMake project
       run: >
-        cmake -B software/build
-        -DCMAKE_C_COMPILER=${{ matrix.sys.c_compiler }}
+        cmake -B software/build ${{ env.CMAKE_TOOLCHAIN_FILE_OPT }} ${{ env.CMAKE_C_COMPILER_OPT }}
         -DCMAKE_BUILD_TYPE=${{ matrix.build_type }}
         -DUSE_SYSTEM_HIDAPI=false
         -G Ninja
         -S software
+      env:
+        CMAKE_TOOLCHAIN_FILE_OPT: ${{ matrix.sys.crosscompile == '' && ' ' || format('-DCMAKE_TOOLCHAIN_FILE=cmake/{0}-linux-toolchain.cmake', matrix.sys.crosscompile) }}
+        CMAKE_C_COMPILER_OPT: ${{ matrix.sys.c_compiler == '' && ' ' || format('-DCMAKE_C_COMPILER={0}', matrix.sys.c_compiler) }}
 
-    - name: Build
+    - name: Build software
       run: cmake --build software/build
 
-    - name: Rename binary
-      if: ${{ matrix.sys.binary_target != '' }}
+    - name: Print some info on compiled binary
       shell: bash
       run: |
-        mv software/build/${{ matrix.sys.binary_orig }} software/build/${{ matrix.sys.binary_target }}
-        ls -l software/build/${{ matrix.sys.binary_target }}
-        file software/build/${{ matrix.sys.binary_target }}
+        echo "=== objdump -x ==="
+        objdump -x software/build/${{ matrix.sys.binary_orig }} || /bin/true
+        echo "=== size -A ==="
+        size -A software/build/${{ matrix.sys.binary_orig }} || /bin/true
+        echo "=== ldd -v ==="
+        ldd -v software/build/${{ matrix.sys.binary_orig }} || /bin/true
+        echo "=== file & ls ==="
+        file software/build/${{ matrix.sys.binary_orig }} || /bin/true
+        ls -l software/build/${{ matrix.sys.binary_orig }} || /bin/true
+
+    - name: Rename binary to release target
+      if: ${{ matrix.sys.binary_release != '' }}
+      shell: bash
+      run: |
+        mv software/build/${{ matrix.sys.binary_orig }} software/build/${{ matrix.sys.binary_release }}
 
     - name: Make and upload release
-      uses: softprops/action-gh-release@v2
-      if: startsWith(github.ref, 'refs/tags/') && matrix.sys.binary_target != ''
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/') && matrix.sys.binary_release != ''
       with:
         fail_on_unmatched_files: false
         generate_release_notes: true        
-        make_latest: true
-        files: software/build/${{ matrix.sys.binary_target }}
+        files: software/build/${{ matrix.sys.binary_release }}

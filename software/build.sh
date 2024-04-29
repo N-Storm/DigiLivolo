@@ -20,7 +20,7 @@ fi
 
 # cmake -DUSE_SYSTEM_HIDAPI=false -B ${SCRIPT_DIR}/build -G 'Unix Makefiles' ${SCRIPT_DIR}
 # cmake -DUSE_SYSTEM_HIDAPI=false -B ${SCRIPT_DIR}/build -G 'Ninja' -Wno-dev ${SCRIPT_DIR}
-cmake -DUSE_SYSTEM_HIDAPI=false -Wno-dev -B ${SCRIPT_DIR}/build ${SCRIPT_DIR}
+cmake -DCMAKE_BUILD_TYPE=Release -DUSE_SYSTEM_HIDAPI=false -Wno-dev -B ${SCRIPT_DIR}/build ${SCRIPT_DIR}
 
 cmake --build ${SCRIPT_DIR}/build
 

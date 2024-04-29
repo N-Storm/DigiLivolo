@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
 	dl_dev = find_digilivolo(devices);
 	if (!dl_dev) {
 		printf("ERROR: unable to find device\n");
-		if (arguments.verbose)
+		if (arguments.verbose) {
 			if (devices) {
 				printf("Devices with matching VID/PID (0x%04x:0x%04x), but wrong product or manufacturer string:\n", DIGILIVOLO_VID, DIGILIVOLO_PID);
 				print_devices(devices);
@@ -84,6 +84,7 @@ int main(int argc, char* argv[])
 				printf("All enumerated devices, but none of them match VID/PID (0x%04x:0x%04x):\n", DIGILIVOLO_VID, DIGILIVOLO_PID);
 				print_devices(devices);
 			}
+		}
 	}
 	else {
 		if (arguments.verbose) {
