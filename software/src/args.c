@@ -24,7 +24,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "digilivolo.h"
+#include "defs.h"
 
 #include <hidapi.h>
 #include "usb_func.h"

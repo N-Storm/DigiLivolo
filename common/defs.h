@@ -1,4 +1,4 @@
-/* Part of the DigiLivolo control software.
+/* Part of the DigiLivolo project.
  * https://github.com/N-Storm/DigiLivolo/ 
  * Copyright (c) 2024 GitHub user N-Storm.
  * 
@@ -18,10 +18,8 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#ifndef __digilivolo_h__
-#define __digilivolo_h__
-
-#include <wchar.h>
+#ifndef __defs_h__
+#define __defs_h__
 
 #define DIGILIVOLO_VID 0x16c0
 #define DIGILIVOLO_PID 0x05df
@@ -32,5 +30,13 @@
 
 #define CMD_SWITCH 0x01 // IN,OUT send Livolo keycode command or send ACK to the host
 #define CMD_RDY 0x10 // OUT, device ready command
+#define CMD_FAIL_BIT (uint8_t)(1 << 7) // Not used
 
-#endif // __digilivolo_h__
+typedef struct dlusb_packet {
+  uint8_t report_id;
+  uint8_t cmd_id;
+  uint16_t remote_id;
+  uint8_t btn_id;
+} dlusb_packet_t;
+
+#endif // __defs_h__

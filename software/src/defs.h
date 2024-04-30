@@ -1,4 +1,4 @@
-/* Part of the DigiLivolo control software.
+/* Part of the DigiLivolo project.
  * https://github.com/N-Storm/DigiLivolo/ 
  * Copyright (c) 2024 GitHub user N-Storm.
  * 
@@ -18,33 +18,25 @@
  * SPDX-License-Identifier: GPL-3.0-or-later
  */
 
-#ifndef __args_h__
-#define __args_h__
+#ifndef __defs_h__
+#define __defs_h__
 
-#include "git_version.h"
-#include <argp.h>
+#define DIGILIVOLO_VID 0x16c0
+#define DIGILIVOLO_PID 0x05df
+#define DIGILIVOLO_MANUFACTURER_STRING L"digilivolo@yandex.com"
+#define DIGILIVOLO_PRODUCT_STRING L"DigiLivolo"
 
-// [argp] A description of the arguments we accept.
-extern char args_doc[];
+#define REPORT_ID 0x4c
 
-// [argp] The options we understand.
-extern struct argp_option options[];
+#define CMD_SWITCH 0x01 // IN,OUT send Livolo keycode command or send ACK to the host
+#define CMD_RDY 0x10 // OUT, device ready command
+#define CMD_FAIL_BIT (uint8_t)(1 << 7) // Not used
 
-// [argp] Program documentation.
-// const char* argp_program_version = GIT_VERSION;
-extern const char prognamever[];
-extern const char doc[];
-extern const char* argp_program_bug_address;
+typedef struct dlusb_packet {
+  uint8_t report_id;
+  uint8_t cmd_id;
+  uint16_t remote_id;
+  uint8_t btn_id;
+} dlusb_packet_t;
 
-// [argp] Command-line arguments.
-typedef struct arguments {
-    uint16_t remote_id;
-    uint8_t key_id;
-    bool verbose;
-} arguments_t;
-
-extern arguments_t arguments;
-
-extern error_t parse_opt(int key, char* arg, struct argp_state* state);
-
-#endif // __args_h__
+#endif // __defs_h__
