@@ -33,8 +33,7 @@
 #include "args.h"
 
 // [argp] Program documentation.
-// const char* argp_program_version = GIT_VERSION;
-const char prognamever[] = "digilivolo " GIT_VERSION "\n";
+const char* argp_program_version = GIT_VERSION;
 const char doc[] = "\nSoftware to control DigiLivolo devices.\n";
 
 const char* argp_program_bug_address = "https://github.com/N-Storm/DigiLivolo/\n\

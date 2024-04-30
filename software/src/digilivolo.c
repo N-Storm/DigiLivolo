@@ -1,18 +1,18 @@
 /* Part of the DigiLivolo control software.
- * https://github.com/N-Storm/DigiLivolo/ 
+ * https://github.com/N-Storm/DigiLivolo/
  * Copyright (c) 2024 GitHub user N-Storm.
- * 
+ *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * This program is distributed in the hope that it will be useful, but 
- * WITHOUT ANY WARRANTY; without even the implied warranty of 
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU 
+ * This program is distributed in the hope that it will be useful, but
+ * WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
  * General Public License for more details.
  *
- * You should have received a copy of the GNU General Public License 
+ * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  *
  * SPDX-License-Identifier: GPL-3.0-or-later
@@ -31,17 +31,19 @@
 #include <hidapi.h>
 #include "usb_func.h"
 
+const char prognamever[] = "digilivolo " GIT_VERSION "\n";
+
 // [argp] Our argp parser.
 static struct argp argp = { options, parse_opt, args_doc, doc };
 
 int main(int argc, char* argv[])
 {
-	int res;
-	unsigned char buf[9];
 	hid_device* handle = NULL;
-	int i;
-
 	struct hid_device_info *devices, *dl_dev;
+	int res, i;
+
+	unsigned char buf[8];
+	dlusb_packet_t* packet = (dlusb_packet_t *)buf;
 
 	// [argp] Default values.
 	arguments.remote_id = 0;
@@ -63,11 +65,11 @@ int main(int argc, char* argv[])
 	if (hid_init())
 		return -1;
 
-	#if defined(__APPLE__) && HID_API_VERSION >= HID_API_MAKE_VERSION(0, 12, 0)
+#if defined(__APPLE__) && HID_API_VERSION >= HID_API_MAKE_VERSION(0, 12, 0)
 	// To work properly needs to be called before hid_open/hid_open_path after hid_init.
 	// Best/recommended option - call it right after hid_init.
 	hid_darwin_set_open_exclusive(0);
-	#endif
+#endif
 
 	devices = hid_enumerate(DIGILIVOLO_VID, DIGILIVOLO_PID);
 	dl_dev = find_digilivolo(devices);
@@ -122,12 +124,11 @@ int main(int argc, char* argv[])
 	hid_set_nonblocking(handle, 1);
 
 	// Send a Feature Report to the device
-	buf[0] = REPORT_ID;
-	buf[1] = CMD_SWITCH;
-	buf[2] = arguments.remote_id & 0xFF;
-	buf[3] = (arguments.remote_id >> 8) & 0xFF;
-	buf[4] = arguments.key_id;
-	res = hid_send_feature_report(handle, buf, 8);
+	packet->report_id = REPORT_ID;
+	packet->cmd_id = CMD_SWITCH;
+	packet->remote_id = arguments.remote_id;
+	packet->btn_id = arguments.key_id;
+	res = hid_send_feature_report(handle, buf, sizeof(buf));
 	if (res < 0) {
 		printf("ERROR: Unable to send a feature report.\n");
 		hid_close(handle);
@@ -137,11 +138,11 @@ int main(int argc, char* argv[])
 	else
 		printf("Codes sent to device.\n");
 
-	memset(buf, 0, sizeof(buf));
+	memset(buf, 0x00, sizeof(buf));
 
 	// Read a Feature Report from the device
-	buf[0] = REPORT_ID;
-	res = hid_get_feature_report(handle, buf, 8);
+	packet->report_id = REPORT_ID;
+	res = hid_get_feature_report(handle, buf, sizeof(buf));
 	if (res < 0) {
 		printf("WARN: Unable to get a feature report: %ls\n", hid_error(handle));
 	}
@@ -153,7 +154,7 @@ int main(int argc, char* argv[])
 		printf("\n");
 	}
 
-	memset(buf, 0, sizeof(buf));
+	memset(buf, 0x00, sizeof(buf));
 
 	hid_close(handle);
 
