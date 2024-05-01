@@ -24,7 +24,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "digilivolo.h"
+#include "defs.h"
 
 #include <hidapi.h>
 #include "usb_func.h"
@@ -32,32 +32,26 @@
 #include "git_version.h"
 #include "args.h"
 
-// [argp] Program documentation.
-// const char* argp_program_version = GIT_VERSION;
-const char prognamever[] = "digilivolo " GIT_VERSION "\n";
+const char* argp_program_version = GIT_VERSION;
 const char doc[] = "\nSoftware to control DigiLivolo devices.\n";
 
 const char* argp_program_bug_address = "https://github.com/N-Storm/DigiLivolo/\n\
 Copyright (c) 2024 GitHub user N-Storm.\n\
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>";
 
-// [argp] A description of the arguments we accept.
-char args_doc[] = "REMOTE_ID KEY_ID";
+char args_doc[] = "REMOTE_ID KEY_CODE";
 
-// [argp] The options we understand.
 struct argp_option options[] = {
   {0,             0,   0,                            0, "Positional arguments:"      },
   {"REMOTE_ID",   0,   0, OPTION_DOC | OPTION_NO_USAGE, "Livilo Remote ID (1-65535)" },
-  {"KEY_ID",      0,   0, OPTION_DOC | OPTION_NO_USAGE, "Livilo Key ID (1-255)"      },
+  {"KEY_CODE",    0,   0, OPTION_DOC | OPTION_NO_USAGE, "Livilo Key ID (1-255)"      },
   {0,             0,   0,                            0, "Options:"                   },
   {"verbose",   'v',   0,                            0, "Produce verbose output"     },
   { 0 }
 };
 
-// [argp] Command-line arguments.
 arguments_t arguments;
 
-// [argp] Parse a single option.
 error_t parse_opt(int key, char* arg, struct argp_state* state)
 {
 	/* Get the input argument from argp_parse, which we
@@ -93,7 +87,7 @@ error_t parse_opt(int key, char* arg, struct argp_state* state)
 				if (value > 255 || value <= 0)
 					argp_usage(state);
 				else
-					arguments->key_id = (uint8_t)value;
+					arguments->btn_id = (uint8_t)value;
 				break;
 
 			default:
@@ -101,7 +95,7 @@ error_t parse_opt(int key, char* arg, struct argp_state* state)
 			}
 		}
 		else
-			// REMOTE_ID or KEY_ID not an unsigned integer
+			// REMOTE_ID or KEY_CODE not an unsigned integer
 			argp_usage(state);
 
 		break;
