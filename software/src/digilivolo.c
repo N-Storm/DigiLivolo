@@ -31,27 +31,23 @@
 #include <hidapi.h>
 #include "usb_func.h"
 
-const char prognamever[] = "digilivolo " GIT_VERSION "\n";
-
-// [argp] Our argp parser.
+ // [argp] Our argp parser.
 static struct argp argp = { options, parse_opt, args_doc, doc };
 
 int main(int argc, char* argv[])
 {
 	hid_device* handle = NULL;
-	struct hid_device_info *devices, *dl_dev;
-	int res, i;
-
-	unsigned char buf[8];
-	dlusb_packet_t* packet = (dlusb_packet_t *)buf;
+	struct hid_device_info* devices, * dl_dev;
+	dlusb_packet_t packet;
+	int res;
 
 	// [argp] Default values.
 	arguments.remote_id = 0;
-	arguments.key_id = 0;
+	arguments.btn_id = 0;
 	arguments.verbose = false;
 
 	// Print program name & version
-	printf("%s\n", prognamever);
+	printf("%s\n", PROG_NAME_VERSION);
 
 	/* Parse our arguments; every option seen by parse_opt will
 	 * be reflected in arguments. */
@@ -59,7 +55,7 @@ int main(int argc, char* argv[])
 
 	if (arguments.verbose) {
 		printf("Compiled with hidapi version %s, runtime version %s.\n", HID_API_VERSION_STR, hid_version_str());
-		printf("Arguments: REMOTE_ID = %d, KEY_ID = %d\n", arguments.remote_id, arguments.key_id);
+		printf("Arguments: REMOTE_ID = %d, KEY_CODE = %d\n", arguments.remote_id, arguments.btn_id);
 	}
 
 	if (hid_init())
@@ -99,10 +95,7 @@ int main(int argc, char* argv[])
 
 	hid_free_enumeration(devices);
 
-	// Set up the command buffer.
-	memset(buf, 0x00, sizeof(buf));
-
-	// Open the device using VID & PID
+	// Check if devices was opened succesfully previously
 	if (!handle) {
 		printf("ERROR: unable to open device\n");
 		hid_exit();
@@ -116,19 +109,29 @@ int main(int argc, char* argv[])
 		hid_exit();
 		return 1;
 	}
-	else {
-		// print_device(info);
-	}
 
 	// Set the hid_read() function to be non-blocking.
 	hid_set_nonblocking(handle, 1);
 
+	res = 1;
+	while (res) {
+		res = dlusb_read(&packet, handle);
+		if (res < 0) {
+			printf("WARN: (%d) Unable to get a feature report: %ls\n", res, hid_error(handle));
+		}
+		else if (res > 0 && arguments.verbose) {
+#ifdef DEBUG
+			// Print out the returned buffer.
+			printf("Read Feature Report from DigiLivolo: ");
+			for (uint32_t i = 0; i < res; i++)
+				printf("%02x ", *(((uint8_t*)&packet) + i));
+			printf("\n");
+#endif // DEBUG
+		}
+	}
+
 	// Send a Feature Report to the device
-	packet->report_id = REPORT_ID;
-	packet->cmd_id = CMD_SWITCH;
-	packet->remote_id = arguments.remote_id;
-	packet->btn_id = arguments.key_id;
-	res = hid_send_feature_report(handle, buf, sizeof(buf));
+	res = dlusb_send(arguments.remote_id, arguments.btn_id, handle);
 	if (res < 0) {
 		printf("ERROR: Unable to send a feature report.\n");
 		hid_close(handle);
@@ -136,25 +139,40 @@ int main(int argc, char* argv[])
 		return 1;
 	}
 	else
-		printf("Codes sent to device.\n");
-
-	memset(buf, 0x00, sizeof(buf));
+		printf("Command sent to device. Waiting for a reply...\n");
 
 	// Read a Feature Report from the device
-	packet->report_id = REPORT_ID;
-	res = hid_get_feature_report(handle, buf, sizeof(buf));
-	if (res < 0) {
-		printf("WARN: Unable to get a feature report: %ls\n", hid_error(handle));
-	}
-	else if (arguments.verbose) {
-		// Print out the returned buffer.
-		printf("Feature Report: ");
-		for (i = 0; i < res; i++)
-			printf("%02x ", (unsigned int)buf[i]);
-		printf("\n");
-	}
+	res = 0;
 
-	memset(buf, 0x00, sizeof(buf));
+	while (res == 0) {
+		res = dlusb_read(&packet, handle);
+		if (res < 0) {
+			printf("WARN: (%d) Unable to get a feature report: %ls\n", res, hid_error(handle));
+			continue;
+		}
+		else if (res > 0) {
+			if (packet.cmd_id == CMD_SWITCH && packet.remote_id == arguments.remote_id && \
+				packet.btn_id == arguments.btn_id) {
+				printf("Device acks codes correctly.\n");
+			}
+			else {
+				printf("ERROR: Got wrong reply from device!\n");
+				hid_close(handle);
+
+				/* Free static HIDAPI objects. */
+				hid_exit();
+
+				return -1;
+			}
+#ifdef DEBUG
+			// Print out the returned buffer.
+			printf("Read Feature Report from DigiLivolo: ");
+			for (uint32_t i = 0; i < res; i++)
+				printf("%02x ", *(((uint8_t*)&packet) + i));
+			printf("\n");
+#endif // DEBUG
+		}
+	}
 
 	hid_close(handle);
 
