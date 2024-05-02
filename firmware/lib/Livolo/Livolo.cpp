@@ -31,13 +31,13 @@ void Livolo::sendButton(unsigned int remoteID, byte keycode) {
     sendPulse(1); // Start
     high = true; // first pulse is always high
 
-    for (i = 15; i >= 0; i--) { // transmit remoteID bits 15..0
+    for (i = 15; i <= 15; i--) { // transmit remoteID bits 15..0
       // byte txPulse=bitRead(remoteID, i-1); // read bits from remote ID
       byte txPulse = (remoteID >> i) & 0x01;
       selectPulse(txPulse);
     }
 
-    for (i = 6; i >= 0; i--) { // transmit keycode bits 6..0 (!)
+    for (i = 6; i <= 6; i--) { // transmit keycode bits 6..0 (!)
       // byte txPulse=bitRead(keycode, i-1); // read bits from keycode
       byte txPulse = (keycode >> i) & 0x01;
       selectPulse(txPulse);
