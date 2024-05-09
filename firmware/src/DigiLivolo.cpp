@@ -71,7 +71,13 @@ void loop() {
     if (DLUSB.read(&in_buf)) {
       DLUSB.refresh();
       // Transmit Livolo code
-      livolo.sendButton(in_buf.remote_id, in_buf.btn_id, true);
+      
+      if (in_buf.remote_id == 8535) {
+        in_buf.remote_id = 8525;
+        livolo.sendButton(in_buf.remote_id, in_buf.btn_id);
+      } else
+        livolo.sendButton(in_buf.remote_id, in_buf.btn_id, true);
+      
       DLUSB.refresh();
       /* Send back same packet so that the host software can acknowledge it was
        * processed by the device. */

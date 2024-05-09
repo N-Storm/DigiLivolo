@@ -229,16 +229,18 @@ void timer1_stop() {
   sei();
 }
 
-ISR(TIMER1_COMPA_vect, ISR_NOBLOCK) {
+ISR(TIMER1_COMPA_vect) {
   PINB = 1 << PINB5;
 
+  sei();
+
   if ((dl_buf.bytes[0] & 0x01) == 0) {
-    timer1_update(OCR_200US, OCR_100US);
+    timer1_update(150, 75);
   }
   else {
     timer1_update(OCR_300US);
   }
-  
+
   dl_buf.buf >>= 1;
 }
 
