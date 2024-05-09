@@ -132,7 +132,7 @@ void Livolo::sendButton(unsigned int remoteID, byte keycode, bool use_timer) {
     tempbuf[1] = __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID & 0xFF), 0);
     tempbuf[0] = __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID >> 8), 0);
 
-    for (uint8_t z = 0; z <= 2; z++) {
+    for (uint8_t z = 0; z <= 180; z++) {
       dl_buf.bytes[2] = tempbuf[2];
       dl_buf.bytes[1] = tempbuf[1];
       dl_buf.bytes[0] = tempbuf[0];
@@ -145,7 +145,7 @@ void Livolo::sendButton(unsigned int remoteID, byte keycode, bool use_timer) {
       timer1_stop();
     }
 
-    delayMicroseconds(500);
+    // delayMicroseconds(500);
     PORTB &= ~(1 << txPin);
     // digitalWrite(txPin, LOW);
 
@@ -212,7 +212,7 @@ inline void timer1_update(uint8_t ocr, uint8_t ocr_aux = 0) {
 
 /// @brief Stops Timer 1
 void timer1_stop() {
-  noInterrupts();
+  cli();
 
   // Stop Timer 1
   TCCR1 &= ~(1 << CS10 | 1 << CS11 | 1 << CS12 | 1 << CS13);
@@ -226,7 +226,7 @@ void timer1_stop() {
   
   TCNT1 = 0;
 
-  interrupts();
+  sei();
 }
 
 ISR(TIMER1_COMPA_vect, ISR_NOBLOCK) {

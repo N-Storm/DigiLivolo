@@ -55,10 +55,14 @@ void setup() {
 
 void loop() {
   DLUSB.refresh();
+
+  /*
   digitalWrite(LED_BUILTIN, HIGH);
   livolo.sendButton(8525, 16, true);
   digitalWrite(LED_BUILTIN, LOW);
   DLUSB.delay(180);
+  */
+
   // Read data from host if available.
   if (DLUSB.available()) {
     // Turn on the LED to indicate received packet.
@@ -67,7 +71,7 @@ void loop() {
     if (DLUSB.read(&in_buf)) {
       DLUSB.refresh();
       // Transmit Livolo code
-      livolo.sendButton(in_buf.remote_id, in_buf.btn_id);
+      livolo.sendButton(in_buf.remote_id, in_buf.btn_id, true);
       DLUSB.refresh();
       /* Send back same packet so that the host software can acknowledge it was
        * processed by the device. */
