@@ -11,8 +11,8 @@
 #include <stdint.h>
 
 #define OCR_100US  51
-#define OCR_200US 101
-#define OCR_300US 151
+#define OCR_200US 102
+#define OCR_300US 153
 #define OCR_500US 251
 
 #if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)

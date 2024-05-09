@@ -123,31 +123,31 @@ void Livolo::sendButton(unsigned int remoteID, byte keycode, bool use_timer) {
       dl_buf.buf = 0;
       return; */
 
+    // Set MSB to 1 (it's not transmitted as keycode are 7-bit, but we use it as a end-of-transmit mark)
     keycode |= (1 << 7);
-    // reversed bit order
-    dl_buf.bytes[2] = __builtin_avr_insert_bits(0x70123456, keycode, 0);
-    dl_buf.bytes[1] = __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID & 0xFF), 0);
-    dl_buf.bytes[0] = __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID >> 8), 0);
-
+        
     uint8_t tempbuf[3];
-    tempbuf[2] = dl_buf.bytes[2];
-    tempbuf[1] = dl_buf.bytes[1];
-    tempbuf[0] = dl_buf.bytes[0];
+    // reversed bit order
+    tempbuf[2] = __builtin_avr_insert_bits(0x70123456, keycode, 0);
+    tempbuf[1] = __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID & 0xFF), 0);
+    tempbuf[0] = __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID >> 8), 0);
 
     for (uint8_t z = 0; z <= 2; z++) {
-      digitalWrite(txPin, HIGH);
+      dl_buf.bytes[2] = tempbuf[2];
+      dl_buf.bytes[1] = tempbuf[1];
+      dl_buf.bytes[0] = tempbuf[0];
+
+      // digitalWrite(txPin, HIGH);
+      PORTB |= 1 << txPin;
       timer1_start();
       // while (dl_buf.buf > 1);
       while (dl_buf.buf != 0);
       timer1_stop();
-
-      dl_buf.bytes[2] = tempbuf[2];
-      dl_buf.bytes[1] = tempbuf[1];
-      dl_buf.bytes[0] = tempbuf[0];
     }
 
     delayMicroseconds(500);
-    digitalWrite(txPin, LOW);
+    PORTB &= ~(1 << txPin);
+    // digitalWrite(txPin, LOW);
 
     timer1_stop();
     PLLCSR &= ~(1 << PCKE);
@@ -187,10 +187,10 @@ void timer1_start() {
   OCR1C = OCR_500US; // 500 uS
   // interrupt COMPA
   OCR1A = OCR_500US; // 500 uS
-  // Prescaler 128, start timer
-  TCCR1 |= (1 << CS13);
   // Output Compare Match A Interrupt Enable
   TIMSK |= (1 << OCIE1A);
+  // Prescaler 128, start timer
+  TCCR1 |= (1 << CS13);
   sei();
 }
 
