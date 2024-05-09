@@ -146,14 +146,18 @@ void Livolo::sendButton(unsigned int remoteID, byte keycode, bool use_timer) {
       dl_buf.bytes[0] = tempbuf[0];
     }
 
+    delayMicroseconds(500);
     digitalWrite(txPin, LOW);
 
     timer1_stop();
     PLLCSR &= ~(1 << PCKE);
     OCR1C = 0xFF;
+    // Reset interrupt flags
+    TIFR = (1 << OCF1A | 1 << OCF1B | 1 << TOV1);
+
+    // Run timer in "old" mode
     TCCR1 = (1 << CTC1 | 1 << PWM1A | 1 << CS10 | 1 << CS11 | 1 << CS12);
     TIMSK = 1 << TOIE1;
-    // delayMicroseconds(500);
   }
   else
     sendButton(remoteID, keycode);
@@ -169,12 +173,9 @@ void timer1_start() {
   // Clear registers
   TCCR1 = 0;
   GTCCR = 0;
-
-  OCR1A = 0xFF;
-  OCR1B = 0xFF;
-  OCR1C = 0xFF;
-
   TCNT1 = 0;
+
+  // Reset interrupt flags
   TIFR = (1 << OCF1B | 1 << OCF1A);
 
   // Enable asynchronous mode on Timer1 (clock source - PLL)
@@ -196,17 +197,6 @@ void timer1_start() {
 /// @brief Changes time to next interrups by updating output compare registers
 /// @param ocr[in] OCR value (used values are defined in OCR_ macros)
 inline void timer1_update(uint8_t ocr, uint8_t ocr_aux = 0) {
-  // cli();
-
-  // TCNT1 = 0;
-  OCR1A = 0xFF;
-  OCR1B = 0xFF;
-  OCR1C = 0xFF;
-
-  TCNT1 = 0;
-  TIFR = (1 << OCF1B | 1 << OCF1A);
-  asm("nop");
-
   OCR1A = ocr;
   OCR1C = ocr;
   if (ocr_aux > 0) {
@@ -217,10 +207,7 @@ inline void timer1_update(uint8_t ocr, uint8_t ocr_aux = 0) {
   else {
     TIMSK &= ~(1 << OCIE1B);
     // OCR1B = 0xFF;
-    // TIFR = 1 << OCF1B;
   }
-
-  // sei();
 }
 
 /// @brief Stops Timer 1
@@ -247,7 +234,6 @@ ISR(TIMER1_COMPA_vect, ISR_NOBLOCK) {
 
   if ((dl_buf.bytes[0] & 0x01) == 0) {
     timer1_update(OCR_200US, OCR_100US);
-    // TIFR = 1 << OCF1B;
   }
   else {
     timer1_update(OCR_300US);
