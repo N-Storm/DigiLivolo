@@ -10,7 +10,6 @@
 #include "Livolo.h"
 
 volatile dl_buffer_u dl_buf = { 0 };
-volatile uint8_t DEBUG_CNT = 0;
 
 Livolo::Livolo(byte pin)
 {
@@ -117,16 +116,9 @@ void Livolo::sendPulse(byte txPulse) {
 // 300 us (one) = 150 ticks
 // 500 us (start) = 250 ticks
 
-uint8_t reverse_bits(uint8_t x)
-{
-    x = (((x & 0xaaU) >> 1) | ((x & 0x55U) << 1));
-    x = (((x & 0xccU) >> 2) | ((x & 0x33U) << 2));
-    x = (((x & 0xf0U) >> 4) | ((x & 0x0fU) << 4));
-    return x;
-}
-
 void Livolo::sendButton(unsigned int remoteID, byte keycode, bool use_timer) {
   if (use_timer == true) {
+    memset((void *)&dl_buf, 0, sizeof(dl_buf));
     /* if (dl_buf.buf != 0) // Still sending previous ?
       dl_buf.buf = 0;
       return; */
@@ -145,7 +137,7 @@ void Livolo::sendButton(unsigned int remoteID, byte keycode, bool use_timer) {
     for (uint8_t z = 0; z <= 2; z++) {
       digitalWrite(txPin, HIGH);
       timer1_start();
-      while (dl_buf.buf > 1);
+      // while (dl_buf.buf > 1);
       while (dl_buf.buf != 0);
       timer1_stop();
 
@@ -162,14 +154,6 @@ void Livolo::sendButton(unsigned int remoteID, byte keycode, bool use_timer) {
     TCCR1 = (1 << CTC1 | 1 << PWM1A | 1 << CS10 | 1 << CS11 | 1 << CS12);
     TIMSK = 1 << TOIE1;
     // delayMicroseconds(500);
-
-    dl_buf.buf = 0;
-
-    /*
-    dl_buf.buf = __builtin_avr_insert_bits(0x01234567, keycode, 0) << 15;
-    dl_buf.buf |= __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID & 0xFF), 0) << 8;
-    dl_buf.buf |= __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID >> 8), 0);
-    */
   }
   else
     sendButton(remoteID, keycode);
@@ -213,7 +197,6 @@ void timer1_start() {
 /// @param ocr[in] OCR value (used values are defined in OCR_ macros)
 inline void timer1_update(uint8_t ocr, uint8_t ocr_aux = 0) {
   // cli();
-  // DEBUG_CNT++;
 
   // TCNT1 = 0;
   OCR1A = 0xFF;

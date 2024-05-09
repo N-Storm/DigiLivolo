@@ -10,33 +10,22 @@
 #include "Arduino.h"
 #include <stdint.h>
 
-// #define MOD_TIME2
-
-#ifdef MOD_TIME
-#define OCR_100US 14
-#define OCR_200US 28
-#define OCR_300US 42
-#define OCR_500US 68
-#else
-#ifdef MOD_TIME2
-#define OCR_100US 52
-#define OCR_200US 103
-#define OCR_300US 155
-#define OCR_500US 255
-#else
 #define OCR_100US  50
 #define OCR_200US 100
 #define OCR_300US 150
 #define OCR_500US 250
-#endif
-#endif
 
+#if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)
+typedef union {
+  __uint24 buf;
+  uint8_t bytes[3];
+} dl_buffer_u;
+#else
 typedef union {
   uint32_t buf;
   uint8_t bytes[4];
 } dl_buffer_u;
-
-extern volatile dl_buffer_u dl_buf;
+#endif
 
 void timer1_start();
 inline void timer1_update(uint8_t ocr, uint8_t ocr_aux);
