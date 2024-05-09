@@ -28,6 +28,7 @@
 #include "usbdrv.h"
 #include "oddebug.h"        // This is also an example for using debug macros
 
+#include "defs.h"
 #include "DLUSB.h"
 
 /* Ring buffer implementation nicked from HardwareSerial.cpp

@@ -25,6 +25,7 @@
 
 Livolo livolo(PIN_B5); // Transmitter connected to pin #5
 dlusb_packet_t in_buf, out_buf; // Input & outpus USB packet buffers
+volatile uint8_t pllreg = 0;
 
 /// @brief Populates dlusb_packet_t struct with RDY packet which are sent
 ///        to the host from setup() on device powerup/reset to signal the
@@ -40,6 +41,17 @@ void mk_rdy_packet(dlusb_packet_t* packet) {
 }
 
 void setup() {
+/*
+  pllreg = PLLCSR;
+  pinMode(PINB0, OUTPUT);
+  digitalWrite(PINB0, HIGH);
+  delayMicroseconds(500);
+  digitalWrite(PINB0, LOW);
+  delayMicroseconds(500);
+  digitalWrite(PINB0, HIGH);
+  delayMicroseconds(500);
+  digitalWrite(PINB0, LOW);
+*/  
   DLUSB.begin();
   DLUSB.refresh();
 
@@ -51,9 +63,29 @@ void setup() {
   pinMode(LED_BUILTIN, OUTPUT);
   digitalWrite(LED_BUILTIN, LOW);
   DLUSB.refresh();
+
+  // pinMode(PINB0, OUTPUT);
 }
 
 void loop() {
+/*
+  digitalWrite(PINB0, LOW);
+  DLUSB.delay(120);
+  digitalWrite(PINB0, HIGH);
+  // livolo.sendButton(8525, 8, true);
+  // livolo.sendButton(8525, 8);
+  digitalWrite(PINB0, LOW);
+  DLUSB.delay(120);
+  digitalWrite(PINB0, HIGH);
+  livolo.sendButton(8525, 16);
+  // livolo.sendButton(0b1111000011100000, 0b11000001, true);
+  digitalWrite(PINB0, LOW);
+*/
+  DLUSB.refresh();
+  digitalWrite(LED_BUILTIN, HIGH);
+  livolo.sendButton(8525, 16, true);
+  digitalWrite(LED_BUILTIN, LOW);
+  DLUSB.delay(100);
   // Read data from host if available.
   if (DLUSB.available()) {
     // Turn on the LED to indicate received packet.
