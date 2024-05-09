@@ -10,10 +10,9 @@
 #include "Arduino.h"
 #include <stdint.h>
 
-#define OCR_100US  51
-#define OCR_200US 102
-#define OCR_300US 153
-#define OCR_500US 251
+#define OCR_HALFBIT  82
+#define OCR_FULLBIT 164
+#define OCR_START   255
 
 #if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)
 typedef union {
