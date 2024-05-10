@@ -137,7 +137,6 @@ void Livolo::sendButton(unsigned int remoteID, byte keycode, bool use_timer) {
       dl_buf.bytes[1] = tempbuf[1];
       dl_buf.bytes[0] = tempbuf[0];
 
-      // digitalWrite(txPin, HIGH);
       PORTB |= 1 << txPin;
       timer1_start();
       // while (dl_buf.buf > 1);
@@ -145,13 +144,12 @@ void Livolo::sendButton(unsigned int remoteID, byte keycode, bool use_timer) {
       timer1_stop();
     }
 
-    // delayMicroseconds(500);
     PORTB &= ~(1 << txPin);
-    // digitalWrite(txPin, LOW);
 
     timer1_stop();
     PLLCSR &= ~(1 << PCKE);
     OCR1C = 0xFF;
+
     // Reset interrupt flags
     TIFR = (1 << OCF1A | 1 << OCF1B | 1 << TOV1);
 
@@ -194,22 +192,6 @@ void timer1_start() {
   sei();
 }
 
-/// @brief Changes time to next interrups by updating output compare registers
-/// @param ocr[in] OCR value (used values are defined in OCR_ macros)
-inline void timer1_update(uint8_t ocr, uint8_t ocr_aux = 0) {
-  OCR1A = ocr;
-  OCR1C = ocr;
-  if (ocr_aux > 0) {
-    OCR1B = ocr_aux;
-    TIFR = 1 << OCF1B;
-    TIMSK |= (1 << OCIE1B);
-  }
-  else {
-    TIMSK &= ~(1 << OCIE1B);
-    // OCR1B = 0xFF;
-  }
-}
-
 /// @brief Stops Timer 1
 void timer1_stop() {
   cli();
@@ -229,11 +211,28 @@ void timer1_stop() {
   sei();
 }
 
+/// @brief Changes time to next interrups by updating output compare registers
+/// @param ocr[in] OCR value (used values are defined in OCR_ macros)
+inline void timer1_update(uint8_t ocr, uint8_t ocr_aux = 0) {
+  OCR1A = ocr;
+  OCR1C = ocr;
+  if (ocr_aux > 0) {
+    OCR1B = ocr_aux;
+    TIFR = 1 << OCF1B;
+    TIMSK |= (1 << OCIE1B);
+  }
+  else {
+    TIMSK &= ~(1 << OCIE1B);
+    // OCR1B = 0xFF;
+  }
+}
+
 ISR(TIMER1_COMPA_vect) {
   PINB = 1 << PINB5;
 
   sei();
 
+  // TODO: no need to update OCR1A, OCR1C with a FULLBIT value
   if ((dl_buf.bytes[0] & 0x01) == 0) {
     timer1_update(OCR_FULLBIT, OCR_HALFBIT);
   }

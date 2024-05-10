@@ -27,8 +27,8 @@ typedef union {
 #endif
 
 void timer1_start();
-inline void timer1_update(uint8_t ocr, uint8_t ocr_aux);
 void timer1_stop();
+inline void timer1_update(uint8_t ocr, uint8_t ocr_aux);
 
 class Livolo
 {
