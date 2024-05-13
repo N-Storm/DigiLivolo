@@ -9,10 +9,19 @@
 
 #include "Arduino.h"
 #include <stdint.h>
+#include <UserTimer.h>
 
+#if defined(TIMER_TO_USE_FOR_USER) && TIMER_TO_USE_FOR_USER == 1
+#define DL_TIMER 1
 #define OCR_HALFBIT  82
 #define OCR_FULLBIT 164
 #define OCR_START   255
+#else
+#define DL_TIMER 0
+#define OCR_HALFBIT  42
+#define OCR_FULLBIT  84
+#define OCR_START   137
+#endif
 
 #if __GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7)
 typedef union {
