@@ -29,8 +29,8 @@
   Low power / smaller code options
 =============================================================================*/
 
-#define INITIALIZE_ANALOG_TO_DIGITAL_CONVERTER    1
-#define INITIALIZE_SECONDARY_TIMERS               1
+#define INITIALIZE_ANALOG_TO_DIGITAL_CONVERTER    0
+#define INITIALIZE_SECONDARY_TIMERS               0
 
 
 /*=============================================================================
@@ -109,7 +109,7 @@
   For various reasons, Timer 1 is a better choice for the millis timer on the
   '85 processor.
 */
-#define TIMER_TO_USE_FOR_MILLIS                   1
+#define TIMER_TO_USE_FOR_MILLIS                   0
 
 /*
   If the following is true (non-zero) there will be two phase-correct PWM 

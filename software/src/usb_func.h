@@ -54,7 +54,7 @@ extern struct hid_device_info* find_digilivolo(struct hid_device_info* cur_dev);
 /// @param handle[in] pointer to DigiLivolo device
 /// @return Passes return code from hid_send_feature_report()
 /// @see hid_send_feature_report
-extern error_t dlusb_send(uint16_t remote_id, uint8_t btn_id, hid_device* handle);
+extern error_t dlusb_send(uint16_t remote_id, uint8_t btn_id, bool use_old_alg, hid_device* handle);
 
 /// @brief Read a Feature Report from the device
 /// @param packet[out] pointer to a dlusb_packet_t

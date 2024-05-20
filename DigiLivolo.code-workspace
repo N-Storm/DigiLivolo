@@ -13,6 +13,7 @@
 	"settings": {
 		"files.associations": {
 			"git_version.h": "c"
-		}
+		},
+		"files.eol": "\n"
 	}
 }
