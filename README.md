@@ -126,8 +126,10 @@ it from there. Requires PlatformIO plugin installed.
 
 * Download or clone this repo.
 * Install [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino) core.
+* Locate Digistump core install directory and replace `cores/tiny/core_build_options.h` file with version, included 
+  with this project: `firmware/packages/framework-arduino-avr-digistump/cores/core_build_options.h`
 * Create new directory `DigiLivolo`, copy `firmware/src/DigiLivolo.cpp` as `DigiLivolo.ino` there.
-* Copy `DLUSB` and `Livolo` libraries from `firmware/lib` to your Arduino libraries directory.
+* Copy `DLUSB`, `DLTransmitter` and `Livolo` libraries from `firmware/lib` to your Arduino libraries directory.
 * Open `DigiLivolo.ino` with Arduino IDE, set board to DigiSpark and compile/upload.
 
 ## Building software
