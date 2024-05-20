@@ -90,7 +90,7 @@ struct hid_device_info* find_digilivolo(struct hid_device_info* cur_dev) {
 	return NULL;
 }
 
-error_t dlusb_send(uint16_t remote_id, uint8_t btn_id, hid_device* handle) {
+error_t dlusb_send(uint16_t remote_id, uint8_t btn_id, bool use_old_alg, hid_device* handle) {
 	int res;
 	// Buffer to constuct packet. HID Report descriptor configured to work with 8 bytes.
 	// But the actual packet struct a bit smaller, so we "fit" it inside buffer.
@@ -98,7 +98,7 @@ error_t dlusb_send(uint16_t remote_id, uint8_t btn_id, hid_device* handle) {
 	dlusb_packet_t* packet = (dlusb_packet_t*)buf;
 
 	packet->report_id = REPORT_ID;
-	packet->cmd_id = CMD_SWITCH;
+	packet->cmd_id = use_old_alg ? CMD_SWITCH_OLD : CMD_SWITCH;
 	packet->remote_id = remote_id;
 	packet->btn_id = btn_id;
 

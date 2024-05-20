@@ -43,7 +43,7 @@ extern const char* argp_program_bug_address;
 typedef struct arguments {
     uint16_t remote_id;
     uint8_t btn_id;
-    bool verbose;
+    bool verbose, old_alg;
 } arguments_t;
 
 extern arguments_t arguments;

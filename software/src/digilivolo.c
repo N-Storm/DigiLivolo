@@ -25,6 +25,14 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#ifdef _WIN32
+#include <windows.h>
+#define dl_sleep_ms(ms) Sleep(ms)
+#else
+#include <unistd.h>
+#define dl_sleep_ms(ms) usleep(ms * 1000)
+#endif
+
 #include "defs.h"
 #include "args.h"
 
@@ -45,6 +53,7 @@ int main(int argc, char* argv[])
 	arguments.remote_id = 0;
 	arguments.btn_id = 0;
 	arguments.verbose = false;
+	arguments.old_alg = false;
 
 	// Print program name & version
 	printf("%s\n", PROG_NAME_VERSION);
@@ -130,8 +139,15 @@ int main(int argc, char* argv[])
 		}
 	}
 
+	if (dl_dev->release_number < 0x200) {
+		arguments.old_alg = false;
+		if (arguments.verbose) {
+			printf("WARN: Device firmware version doesn't supports old-alg feature. Using default, which should be old algorithm anyways.\n");
+		}
+	}
+
 	// Send a Feature Report to the device
-	res = dlusb_send(arguments.remote_id, arguments.btn_id, handle);
+	res = dlusb_send(arguments.remote_id, arguments.btn_id, arguments.old_alg, handle);
 	if (res < 0) {
 		printf("ERROR: Unable to send a feature report.\n");
 		hid_close(handle);
@@ -145,14 +161,24 @@ int main(int argc, char* argv[])
 	res = 0;
 
 	while (res == 0) {
+		dl_sleep_ms(300);
 		res = dlusb_read(&packet, handle);
+		if (res == -1) { // This error usually means that the hardware didn't finished processing yet, give it one more try after delay
+			if (arguments.verbose) {
+				printf("WARN: (%d) Unable to get ACK feature report: %ls.\n", res, hid_error(handle));
+				dl_sleep_ms(10);
+				printf(" Retrying...\n");
+			}
+			dl_sleep_ms(300);
+			res = dlusb_read(&packet, handle);
+		}
 		if (res < 0) {
-			printf("WARN: (%d) Unable to get a feature report: %ls\n", res, hid_error(handle));
+			printf("WARN: (%d) Unable to get ACK feature report: %ls\n", res, hid_error(handle));
 			continue;
 		}
 		else if (res > 0) {
-			if (packet.cmd_id == CMD_SWITCH && packet.remote_id == arguments.remote_id && \
-				packet.btn_id == arguments.btn_id) {
+			if (packet.cmd_id == ((arguments.old_alg == true) ? CMD_SWITCH_OLD : CMD_SWITCH) && \
+				packet.remote_id == arguments.remote_id && packet.btn_id == arguments.btn_id) {
 				printf("Device acks codes correctly.\n");
 			}
 			else {

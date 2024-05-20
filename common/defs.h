@@ -29,6 +29,8 @@
 #define REPORT_ID 0x4c
 
 #define CMD_SWITCH 0x01 // IN,OUT send Livolo keycode command or send ACK to the host
+#define CMD_SWITCH_OLD 0x02 // IN,OUT send Livolo keycode command or send ACK to the host, but use original Livolo lib method
+#define CMD_ERR_UNKNOWN 0xFF // OUT ERROR unknown CMD code
 #define CMD_RDY 0x10 // OUT, device ready command
 #define CMD_FAIL_BIT (uint8_t)(1 << 7) // Not used
 
