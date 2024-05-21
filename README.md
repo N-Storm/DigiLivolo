@@ -132,7 +132,7 @@ it from there. Requires PlatformIO plugin installed.
 
 * Download or clone this repo.
 * Install [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino) core.
-* Locate Digistump core install directory and replace `cores/tiny/core_build_options.h` file with version, included 
+* Locate Digistump core install directory and replace `cores/tiny/core_build_options.h` file with version, included
   with this project: `firmware/packages/framework-arduino-avr-digistump/cores/core_build_options.h`
 * Create new directory `DigiLivolo`, copy `firmware/src/DigiLivolo.cpp` as `DigiLivolo.ino` there.
 * Copy `DLUSB`, `DLTransmitter` and `Livolo` libraries from `firmware/lib` to your Arduino libraries directory.
@@ -157,7 +157,8 @@ statically linked. If you wish to use system installed `hidapi` library and you 
 installed, add `-DUSE_SYSTEM_HIDAPI=true` option to first cmake command on the example above.
 
 ## Software & libraries used
-##### Project
+
+### Project
 
 * [PlatformIO](https://platformio.org/)
 * [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino)
@@ -167,7 +168,7 @@ installed, add `-DUSE_SYSTEM_HIDAPI=true` option to first cmake command on the e
 * [hidapitester](https://github.com/todbot/hidapitester)
 * [argp-standalone](https://github.com/tom42/argp-standalone)
 
-##### Github Actions
+### GitHub Actions
 
 * [Checkout V3](https://github.com/actions/checkout/tree/releases/v3)
 * [action gh-release](https://github.com/softprops/action-gh-release)
