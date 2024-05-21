@@ -64,14 +64,20 @@ Usage: digilivolo [OPTION...] REMOTE_ID KEY_ID
 Software to control DigiLivolo devices.
 
  Positional arguments:
-  KEY_ID                     Livilo Key ID (1-255)
+  KEY_CODE                   Livilo Key ID (1-255)
   REMOTE_ID                  Livilo Remote ID (1-65535)
 
  Options:
+  -o, --old-alg              Use deperecated original transmit algorithm
   -v, --verbose              Produce verbose output
 
   -?, --help                 Give this help list
+  -V, --version              Print program version
       --usage                Give a short usage message
+
+Report bugs to https://github.com/N-Storm/DigiLivolo/
+Copyright (c) 2024 GitHub user N-Storm.
+License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>.
 ```
 
 REMOTE_ID and KEY_ID can be specified either as deciman numbers or hex numbers if preceeded by `'0x'`.
@@ -151,6 +157,7 @@ statically linked. If you wish to use system installed `hidapi` library and you 
 installed, add `-DUSE_SYSTEM_HIDAPI=true` option to first cmake command on the example above.
 
 ## Software & libraries used
+##### Project
 
 * [PlatformIO](https://platformio.org/)
 * [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino)
@@ -159,3 +166,12 @@ installed, add `-DUSE_SYSTEM_HIDAPI=true` option to first cmake command on the e
 * [hidapi](https://github.com/libusb/hidapi)
 * [hidapitester](https://github.com/todbot/hidapitester)
 * [argp-standalone](https://github.com/tom42/argp-standalone)
+
+##### Github Actions
+
+* [Checkout V3](https://github.com/actions/checkout/tree/releases/v3)
+* [action gh-release](https://github.com/softprops/action-gh-release)
+* [Setup MSYS2](https://github.com/msys2/setup-msys2)
+* [install-package](https://github.com/ConorMacBride/install-package/)
+* [Get Ninja GitHub Action](https://github.com/turtlesec-no/get-ninja)
+* [GitHub Action: Setup Alpine Linux](https://github.com/marketplace/actions/setup-alpine-linux-environment)

@@ -20,15 +20,16 @@ jobs:
 
       matrix:
         sys:
-          - { os: ubuntu-latest, container: 'ghcr.io/phusion/holy-build-box/hbb-64', shell: bash       , c_compiler: gcc    , binary_orig: digilivolo }
-          - { os: ubuntu-latest, container: 'debian:10'                            , shell: bash       , c_compiler: gcc    , binary_orig: digilivolo }
-          - { os: ubuntu-20.04                                                     , shell: bash       , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-x86_64 }
-          - { os: ubuntu-latest, container: 'debian'                               , shell: bash       , crosscompile: armhf, binary_orig: digilivolo    , binary_release: digilivolo-linux-armhf }
-          - { os: ubuntu-latest, container: 'debian'                               , shell: bash       , crosscompile: arm64, binary_orig: digilivolo    , binary_release: digilivolo-linux-arm64 }
-          - { os: ubuntu-20.04                                                     , shell: bash       , c_compiler: clang  , binary_orig: digilivolo }
-          - { os: windows-latest                                                   , shell: 'msys2 {0}', c_compiler: gcc    , binary_orig: digilivolo.exe, binary_release: digilivolo-win-x86_64.exe }
-          - { os: windows-latest                                                   , shell: pwsh       , c_compiler: gcc    , binary_orig: digilivolo.exe }
-          - { os: windows-latest                                                   , shell: pwsh       , c_compiler: clang  , binary_orig: digilivolo.exe }
+          - { os: ubuntu-latest, container: 'ghcr.io/phusion/holy-build-box/hbb-64', shell: bash           , c_compiler: gcc    , binary_orig: digilivolo }
+          - { os: ubuntu-latest, container: 'debian:10'                            , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo }
+          - { os: ubuntu-20.04                                                     , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-x86_64 }
+          - { os: ubuntu-latest                                                    , shell: 'alpine.sh {0}', crosscompile: i386 , binary_orig: digilivolo    , binary_release: digilivolo-linux-static-i386 }
+          - { os: ubuntu-latest, container: 'debian'                               , shell: bash           , crosscompile: armhf, binary_orig: digilivolo    , binary_release: digilivolo-linux-armhf }
+          - { os: ubuntu-latest, container: 'debian'                               , shell: bash           , crosscompile: arm64, binary_orig: digilivolo    , binary_release: digilivolo-linux-arm64 }
+          - { os: ubuntu-20.04                                                     , shell: bash           , c_compiler: clang  , binary_orig: digilivolo }
+          - { os: windows-latest                                                   , shell: 'msys2 {0}'    , c_compiler: gcc    , binary_orig: digilivolo.exe, binary_release: digilivolo-win-x86_64.exe }
+          - { os: windows-latest                                                   , shell: pwsh           , c_compiler: gcc    , binary_orig: digilivolo.exe }
+          - { os: windows-latest                                                   , shell: pwsh           , c_compiler: clang  , binary_orig: digilivolo.exe }
         build_type: [Release]
 
     defaults:
@@ -47,6 +48,33 @@ jobs:
         git config --global --add safe.directory /__w/DigiLivolo/DigiLivolo
         echo
         cat /etc/os-release
+
+    - name: Install & configure Alpine Linux build environment for i386 build
+      uses: jirutka/setup-alpine@v1
+      if: matrix.sys.crosscompile == 'i386'
+      with:
+        arch: x86
+        packages: |
+          build-base
+          sudo
+          git
+          dialog
+          python3
+          py3-pip
+          py3-setuptools
+          ninja-build
+          samurai
+          make
+          cmake
+          libusb-dev
+          eudev
+          eudev-libs
+          eudev-dev
+          curl
+          wget
+          pkgconf
+          pkgconf-dev
+          linux-headers
 
     - name: Install packages required for the workflow and build deps
       uses: ConorMacBride/install-package@v1
@@ -83,7 +111,7 @@ jobs:
           ninja:p
 
     - name: Install cross compiling toolchain and deps
-      if: ${{ matrix.sys.crosscompile != '' }}
+      if: matrix.sys.crosscompile != '' && matrix.sys.crosscompile != 'i386'
       shell: bash
       run: |
         echo "Installing cross toolchain for ${{ matrix.sys.crosscompile }}"
@@ -122,8 +150,7 @@ jobs:
     - name: Rename binary to release target
       if: ${{ matrix.sys.binary_release != '' }}
       shell: bash
-      run: |
-        mv software/build/${{ matrix.sys.binary_orig }} software/build/${{ matrix.sys.binary_release }}
+      run: mv software/build/${{ matrix.sys.binary_orig }} software/build/${{ matrix.sys.binary_release }}
 
     - name: Make and upload release
       uses: softprops/action-gh-release@v1
