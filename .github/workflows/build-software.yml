@@ -43,7 +43,7 @@ jobs:
       run: |
         apt update || yum -y install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
         apt -y full-upgrade || yum update -y
-        apt install -y sudo git dialog python3 python3-pip python3-setuptools curl wget || yum install -y sudo git dialog python3 python3-pip python3-setuptools ninja-build make cmake3 libusb-devel libudev-devel curl wget
+        apt install -y curl dialog git python3 python3-pip python3-setuptools sudo wget || yum install -y cmake3 curl dialog git libudev-devel libusb-devel make ninja-build python3 python3-pip python3-setuptools sudo wget
         git --version
         git config --global --add safe.directory /__w/DigiLivolo/DigiLivolo
         echo
@@ -54,33 +54,13 @@ jobs:
       if: matrix.sys.crosscompile == 'i386'
       with:
         arch: x86
-        packages: |
-          build-base
-          sudo
-          git
-          dialog
-          python3
-          py3-pip
-          py3-setuptools
-          ninja-build
-          samurai
-          make
-          cmake
-          libusb-dev
-          eudev
-          eudev-libs
-          eudev-dev
-          curl
-          wget
-          pkgconf
-          pkgconf-dev
-          linux-headers
+        packages: build-base cmake curl dialog eudev eudev-dev eudev-libs git libusb-dev linux-headers make ninja-build pkgconf pkgconf-dev py3-pip py3-setuptools python3 samurai sudo wget
 
     - name: Install packages required for the workflow and build deps
       uses: ConorMacBride/install-package@v1
       if: matrix.sys.container != 'ghcr.io/phusion/holy-build-box/hbb-64'
       with:
-        apt: libudev-dev sudo gcc cmake build-essential make sudo libusb-dev libc6-dev pkg-config file ninja-build clang
+        apt: build-essential clang cmake file gcc libc6-dev libudev-dev make ninja-build pkg-config sudo
 
     - name: Checkout repo
       uses: actions/checkout@v3
@@ -101,14 +81,8 @@ jobs:
       with:
         msystem: UCRT64
         update: true
-        install: >-
-          git
-          make
-          mingw-w64-ucrt-x86_64-gcc
-        pacboy: >-
-          toolchain:p
-          cmake:p
-          ninja:p
+        install: git make mingw-w64-ucrt-x86_64-gcc
+        pacboy: cmake:p ninja:p toolchain:p
 
     - name: Install cross compiling toolchain and deps
       if: matrix.sys.crosscompile != '' && matrix.sys.crosscompile != 'i386'
