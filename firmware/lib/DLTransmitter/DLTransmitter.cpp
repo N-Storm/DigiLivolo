@@ -190,7 +190,7 @@ void inline switch_txPin() {
     PINB = 1 << txPin_g;
   #else
     state_buf = !state_buf;
-    digitalWrite(*txPin_g, state_buf ? HIGH : LOW);
+    digitalWrite(txPin_g, state_buf ? HIGH : LOW);
   #endif
 }
 
