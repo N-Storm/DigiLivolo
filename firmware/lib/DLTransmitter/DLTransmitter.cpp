@@ -21,7 +21,7 @@
 #include "DLTransmitter.h"
 
 volatile dl_buffer_u dl_buf = { 0 };
-uint8_t *txPin_p;
+uint8_t txPin_g;
 
 #ifndef __AVR_ATtinyX5__
   static bool state_buf = false;
@@ -31,7 +31,6 @@ DLTransmitter::DLTransmitter(uint8_t pin) : Livolo(pin)
 {
   pinMode(pin, OUTPUT);
   txPin = pin;
-  txPin_p = &txPin;
 }
 
 // Sequence remoteID, 16 bits followed by keycode, 7 bits
@@ -39,6 +38,7 @@ DLTransmitter::DLTransmitter(uint8_t pin) : Livolo(pin)
 
 void DLTransmitter::sendButton(uint16_t remoteID, uint8_t keycode, bool use_timer, void (*idleCallback_ptr)(void)) {
   if (use_timer == true) {
+    txPin_g = txPin;
     memset((void *)&dl_buf, 0, sizeof(dl_buf));
 
     // Set MSB to 1 (it's not transmitted as keycode are 7-bit, but we use it as a end-of-transmit mark)
@@ -61,10 +61,6 @@ void DLTransmitter::sendButton(uint16_t remoteID, uint8_t keycode, bool use_time
     #endif
 
     for (uint8_t z = 0; z <= 128; z++) {
-      dl_buf.bytes[2] = tempbuf[2];
-      dl_buf.bytes[1] = tempbuf[1];
-      dl_buf.bytes[0] = tempbuf[0];
-
       memcpy((void *)dl_buf.bytes, tempbuf, 3);
 
       #ifdef __AVR_ATtinyX5__
@@ -184,7 +180,7 @@ inline void timer1_update(uint8_t ocr, uint8_t ocr_aux = 0) {
 
 ISR(TIMER1_COMPA_vect) {
   #ifdef __AVR_ATtinyX5__
-    PINB = 1 << *txPin_p;
+    PINB = 1 << txPin_g;
   #else
     state_buf = !state_buf;
     digitalWrite(*txPin_p, state_buf ? HIGH : LOW);
@@ -205,7 +201,7 @@ ISR(TIMER1_COMPA_vect) {
 
 ISR(TIMER1_COMPB_vect) {
   #ifdef __AVR_ATtinyX5__
-    PINB = 1 << *txPin_p;
+    PINB = 1 << txPin_g;
   #else
     state_buf = !state_buf;
     digitalWrite(*txPin_p, state_buf ? HIGH : LOW);
