@@ -33,15 +33,15 @@
 #define dl_sleep_ms(ms) usleep(ms * 1000)
 #endif
 
-#if defined(__APPLE__) && HID_API_VERSION >= HID_API_MAKE_VERSION(0, 12, 0)
-#include <hidapi_darwin.h>
-#endif
-
 #include "defs.h"
 #include "args.h"
 
 #include <hidapi.h>
 #include "usb_func.h"
+
+#if defined(__APPLE__) && HID_API_VERSION >= HID_API_MAKE_VERSION(0, 12, 0)
+#include <hidapi_darwin.h>
+#endif
 
  // [argp] Our argp parser.
 static struct argp argp = { options, parse_opt, args_doc, doc };
