@@ -23,7 +23,7 @@
 #include <DLTransmitter.h>
 #include <stdint.h>
 
-DLTransmitter DLTransmitter(PIN_B5); // Transmitter connected to pin #5
+DLTransmitter dltransmitter(PIN_B5); // Transmitter connected to pin #5
 dlusb_packet_t in_buf, out_buf; // Input & outpus USB packet buffers
 
 /// @brief Populates dlusb_packet_t struct with RDY packet which are sent
@@ -71,9 +71,9 @@ void loop() {
       if (in_buf.cmd_id == CMD_SWITCH || in_buf.cmd_id == CMD_SWITCH_OLD) {
         // Transmit Livolo code
         if (in_buf.cmd_id == CMD_SWITCH) // New method
-          DLTransmitter.sendButton(in_buf.remote_id, in_buf.btn_id, true, &DLUSB_refresh_wrapper);
+          dltransmitter.sendButton(in_buf.remote_id, in_buf.btn_id, true, &DLUSB_refresh_wrapper);
         else if (in_buf.cmd_id == CMD_SWITCH_OLD) // Old method
-          DLTransmitter.sendButton(in_buf.remote_id, in_buf.btn_id);
+          dltransmitter.sendButton(in_buf.remote_id, in_buf.btn_id);
 
         DLUSB.refresh();
         
