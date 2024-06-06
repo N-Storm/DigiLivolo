@@ -22,11 +22,11 @@ Can be built from ArduinoIDE as well, but it will take few more steps to prepare
 
 Firmware code has been developed for
 [Digispark module by Digistump](https://en.wikipedia.org/wiki/List_of_Arduino_boards_and_compatible_systems#Digispark).
-This module already has everything for running [V-USB](https://www.obdev.at/products/vusb/index.html). 
+This module already has everything for running [V-USB](https://www.obdev.at/products/vusb/index.html).
 This firmware should also work on any other ATTiny85 based Arduino module or bare AVR hardware. Depending on the
 board/pin configuration, it might be required to adjust USB-related config headers.
 For other AVR-based boards firmware will require some changes in the code, mostly changing V-USB config header to
-adapt it to hardware. Partial support for other AVR hardware are in the code, but it's not complete and not tested 
+adapt it to hardware. Partial support for other AVR hardware are in the code, but it's not complete and not tested
 at all as for now. Feel free to open an issue on Github project page to drop a support request for other
 Arduino board.
 
@@ -38,10 +38,11 @@ into flash even with default 2Kb bootloader, so it should work along with it as 
 Because PlatformIO doesn't have the latest [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino)
 framework, I've included one in `firmware/packages/framework-arduino-avr-digistump`. RF transmitter code
 uses hardware Timer 1 to generate accurate waveforms, so I've changed framework configuration to use Timer 0
-for millis() instead of defaults using Timer 1 for that. See build section below for details.
+for millis() instead of defaults using Timer 1 for that. Thankfully that required to change 1 line in the
+`core_build_options.h` file of the framework (set TIMER_TO_USE_FOR_MILLIS to 0 for ATtiny85 build options there).
 
 Library `DLUSB` for the HID USB communications are based on DigiUSB library, included with
-`DigistumpArduino`. Compared to original library it was improved slightly, mostly notable is to allow more than 
+`DigistumpArduino`. Compared to original library it was improved slightly, mostly notable is to allow more than
 1 byte bidirectional USB communication via USB HID Reports.
 
 ## Usage
@@ -152,7 +153,7 @@ it from there. Requires PlatformIO plugin installed.
 
 Clone git repo with submodules (these are the build requirements for software part):
 
-```
+```shell
 git clone --recurse-submodules https://github.com/N-Storm/DigiLivolo
 ```
 

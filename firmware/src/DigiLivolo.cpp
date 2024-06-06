@@ -23,7 +23,11 @@
 #include <DLTransmitter.h>
 #include <stdint.h>
 
-DLTransmitter dltransmitter(PIN_B5); // Transmitter connected to pin #5
+/* Pin currently set at compile time in DLTransmitter.h. When it defined there, pin from the constructor
+ * parameter are ignored. To change pin number either edit #define DL_STATIC_PIN line in DLTransmitter.h
+ * as well or comment out that define and set pin from here. */
+DLTransmitter dltransmitter(PIN_B5);
+
 dlusb_packet_t in_buf, out_buf; // Input & outpus USB packet buffers
 
 /// @brief Populates dlusb_packet_t struct with RDY packet which are sent

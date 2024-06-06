@@ -29,6 +29,11 @@
 // How many times packet are repeated on transmit for one button code
 #define DLTRANSMIT_REPEATS 128
 
+/* Uncomment line below to make transmit pin set at compile time ("hardcoded").
+ * Results in smaller interrupt routines -> more USB stability & RF accuracy.
+ * If set, pin setting from the constructor call will be ignored. */
+#define DL_STATIC_PIN PIN_B5
+
 class DLTransmitter : public Livolo
 {
 public:
@@ -51,26 +56,35 @@ private:
   #ifdef __cplusplus
     } // extern "C"
   #endif
-  #if defined(TIMER_TO_USE_FOR_USER) && TIMER_TO_USE_FOR_USER == 1
+  #if defined(TIMER_TO_USE_FOR_USER) && (TIMER_TO_USE_FOR_USER == 1)
+    /* Attiny x5, DigiStump core defines are set & Timer 1 are available for user.
+     * Looks like we're using bundled reconfigured core ("native") or it was reconfigured by user.
+     */
     #define DL_NATIVE_CORE
     #define DL_TIMER DL_TIMER_PLL
+    // Timer OCR values for PLL mode on a native core have are precalculated.
     #define OCR_HALFBIT  82
     #define OCR_FULLBIT 164
     #define OCR_START   255
   #else
     #if defined(TIMER_TO_USE_FOR_USER) && TIMER_TO_USE_FOR_USER == 0
-      #define DL_TIMER 0
-      #error "Timer 0 on DigiStump core are not supported yet. Please change TIMER_TO_USE_FOR_MILLIS to 0 in Digistump core to make Timer 1 available."
+      // Assuming we're on the default DigiStump core.
+      // #define DL_TIMER 0
+      #undef DL_TIMER
+      #warning "Digistump core are configured to use Timer 1 for millis(). Will use old RF routines as fallback. Please change TIMER_TO_USE_FOR_MILLIS to 0 in Digistump core to make Timer 1 available."
     #else
-      #error "Unsupported/unknnown ATTiny85 core or unknown configuration."
+      #undef DL_TIMER
+      #warning "Unsupported/unknown ATTiny85 core or unknown configuration. Will use old RF routines as fallback."
     #endif
   #endif
 #else
+  // Most likely we're on a "classic" Arduino part/core with Timer 1 available for user.
   #define DL_TIMER 1
-  #warn "Not ATTiny85 or unsupported core. Using Timer1, may break things if it's used by this core."
+  #warning "Not an ATTiny85 or unsupported core. Using Timer1, may break things if it's used by this core."
 #endif
 
-#if DL_TIMER != DL_TIMER_PLL
+#if defined(DL_TIMER) && (DL_TIMER != DL_TIMER_PLL)
+  // For a non-PLL mode of Timer operation, we calculate OCR values at a compile time
   #define OCR_START_US 530ULL
   #define OCR_BIT_US 320ULL
   #define DL_TIMER_PRESCALER 64

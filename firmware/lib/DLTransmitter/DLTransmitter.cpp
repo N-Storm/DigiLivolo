@@ -21,6 +21,7 @@
 #include "DLTransmitter.h"
 
 volatile dl_buffer_u dl_buf = { 0 };
+
 uint8_t txPin_g = 0;
 
 #ifndef __AVR_ATtinyX5__
@@ -29,93 +30,107 @@ uint8_t txPin_g = 0;
 
 DLTransmitter::DLTransmitter(uint8_t pin) : Livolo(pin)
 {
-  pinMode(pin, OUTPUT);
-  txPin = pin;
+  #ifdef DL_STATIC_PIN
+    pinMode(DL_STATIC_PIN, OUTPUT);
+    txPin = DL_STATIC_PIN;
+  #else
+    pinMode(pin, OUTPUT);
+    txPin = pin;
+  #endif
 }
 
-// Sequence remoteID, 16 bits followed by keycode, 7 bits
-// seq = (remoteID << 7) + (keycode & 0x7F)
+/* Sequence begins with remoteID (16 bits), followed by a keycode (7 bits).
+ * I.e. one code sequence are aired as "(remoteID << 7) + (keycode & 0x7F)".
+ * We always set remaining MSB in keycode to 1, it's used to find an end of sequence when we're shifting bits on transmit. */
 
 void DLTransmitter::sendButton(uint16_t remoteID, uint8_t keycode, bool use_timer, void (*idleCallback_ptr)(void)) {
-  // Use new Timer function if available & not used right now
-  if (use_timer == true && txPin_g == 0) {
-    txPin_g = txPin;
+  // Use new Timer function if available & not used right now.
+  #ifdef DL_TIMER
+    if (use_timer == true && txPin_g == 0) {
+      txPin_g = txPin;
 
-    // Clear transmit buffer struct
-    memset((void *)&dl_buf, 0, sizeof(dl_buf));
+      // Clear transmit buffer struct
+      memset((void *)&dl_buf, 0, sizeof(dl_buf));
 
-    // Set MSB to 1 (it's not transmitted as keycode are 7-bit, but we use it as a end-of-transmit mark)
-    keycode |= (1 << 7);
+      // Set MSB to 1 (it's not transmitted as keycode are 7-bit, but we use it as a "end of sequence" mark).
+      keycode |= (1 << 7);
         
-    // Prepare data bits in transmit order (reversed as they are right shifted during transmit).
-    // Volatile transmit buffer dl_buf will be set from here each repeat.
-    uint8_t dl_buf_origin[3];
-    dl_buf_origin[2] = __builtin_avr_insert_bits(0x70123456, keycode, 0);
-    dl_buf_origin[1] = __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID & 0xFF), 0);
-    dl_buf_origin[0] = __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID >> 8), 0);
+      // Prepare data bits in transmit order (reversed as they are right shifted during transmit).
+      // Volatile transmit buffer dl_buf will be set from here each repeat.
+      uint8_t dl_buf_origin[3];
+      dl_buf_origin[2] = __builtin_avr_insert_bits(0x70123456, keycode, 0);
+      dl_buf_origin[1] = __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID & 0xFF), 0);
+      dl_buf_origin[0] = __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID >> 8), 0);
 
-    // Save timer settings if not using native core
-    #ifndef DL_NATIVE_CORE
-      uint8_t tccr1_saved, gtccr_saved, tifr_saved, ocr1a_saved, ocr1c_saved;
-      tccr1_saved = TCCR1;
-      gtccr_saved = GTCCR;
-      tifr_saved = TIFR;
-      ocr1a_saved = OCR1A;
-      ocr1c_saved = OCR1C;
-    #endif
-
-    // Transmit loop. Packet with one button press are transmitted 128 times, as the original remote does.
-    for (uint8_t z = 0; z <= DLTRANSMIT_REPEATS; z++) {
-      memcpy((void *)dl_buf.bytes, dl_buf_origin, 3);
-
-      #ifdef __AVR_ATtinyX5__
-        PORTB |= 1 << txPin;
-      #else
-        digitalWrite(txPin, HIGH);
+      // Save timer registers if not on a native core
+      #ifndef DL_NATIVE_CORE
+        uint8_t tccr1_saved, gtccr_saved, tifr_saved, ocr1a_saved, ocr1c_saved;
+        tccr1_saved = TCCR1;
+        gtccr_saved = GTCCR;
+        tifr_saved = TIFR;
+        ocr1a_saved = OCR1A;
+        ocr1c_saved = OCR1C;
       #endif
 
-      timer1_start();
-      // while (dl_buf.buf > 1);
-      // TODO: Make non-blocking function
-      while (dl_buf.buf != 0)
-        if (idleCallback_ptr != NULL)
-          idleCallback_ptr();
+      // Transmit loop. Packet with one button press are transmitted 128 times, as the original remote does.
+      for (uint8_t z = 0; z <= DLTRANSMIT_REPEATS; z++) {
+        memcpy((void *)dl_buf.bytes, dl_buf_origin, 3);
+
+        #if defined(__AVR_ATtinyX5__) && defined (DL_STATIC_PIN) // ATTiny 25/45/85 has only one IO PORT - B.
+          PORTB |= 1 << DL_STATIC_PIN;
+        #elif defined(__AVR_ATtinyX5__)
+          PORTB |= 1 << txPin;
+        #else
+          digitalWrite(txPin, HIGH);
+        #endif
+
+        timer1_start();
+        // while (dl_buf.buf > 1);
+        // TODO: Make non-blocking function
+        while (dl_buf.buf != 0)
+          if (idleCallback_ptr != NULL)
+            idleCallback_ptr();
+
+        timer1_stop();
+      }
+
+      #if defined(__AVR_ATtinyX5__) && defined (DL_STATIC_PIN)
+        PORTB &= ~(1 << DL_STATIC_PIN);
+      #elif defined(__AVR_ATtinyX5__)
+        PORTB &= ~(1 << txPin);
+      #else
+        digitalWrite(txPin, LOW);
+      #endif
 
       timer1_stop();
+      #if DL_TIMER == DL_TIMER_PLL
+        PLLCSR &= ~(1 << PCKE);
+      #endif
+      #ifndef DL_NATIVE_CORE
+      #endif
+
+      OCR1C = 0xFF;
+
+      // Reset interrupt flags
+      TIFR = (1 << OCF1A | 1 << OCF1B | 1 << TOV1);
+
+      // Restore timer-related registers content
+      #if not defined(DL_NATIVE_CORE) && DL_TIMER == 1
+        TCCR1 = tccr1_saved;
+        GTCCR = gtccr_saved;
+        TIFR = tifr_saved;
+        OCR1A = ocr1a_saved;
+        OCR1C = ocr1c_saved;
+      #endif
+
+      txPin_g = 0;
     }
-
-    #ifdef __AVR_ATtinyX5__
-      PORTB &= ~(1 << txPin);
-    #else
-      digitalWrite(txPin, LOW);
-    #endif
-
-    timer1_stop();
-    #if DL_TIMER == DL_TIMER_PLL
-      PLLCSR &= ~(1 << PCKE);
-    #endif
-    #ifndef DL_NATIVE_CORE      
-    #endif
-
-    OCR1C = 0xFF;
-
-    // Reset interrupt flags
-    TIFR = (1 << OCF1A | 1 << OCF1B | 1 << TOV1);
-
-    // Restore timer-related registers content
-    #if not defined(DL_NATIVE_CORE) && DL_TIMER == 1
-      TCCR1 = tccr1_saved;
-      GTCCR = gtccr_saved;
-      TIFR = tifr_saved;
-      OCR1A = ocr1a_saved;
-      OCR1C = ocr1c_saved;      
-    #endif
-
-    txPin_g = 0;
-  }
-  else // Use original function
-    Livolo::sendButton(remoteID, keycode);
+    else // Use original function
+  #endif
+      Livolo::sendButton(remoteID, keycode);
 }
+
+#ifdef DL_TIMER
 
 /// @brief Initializes and starts Timer 1
 void DLTransmitter::timer1_start() {
@@ -186,7 +201,9 @@ inline void timer1_update(uint8_t ocr, uint8_t ocr_aux = 0) {
 }
 
 void inline switch_txPin() {
-  #ifdef __AVR_ATtinyX5__
+  #if defined(__AVR_ATtinyX5__) && defined (DL_STATIC_PIN)
+    PINB = 1 << DL_STATIC_PIN;
+  #elif defined(__AVR_ATtinyX5__)
     PINB = 1 << txPin_g;
   #else
     state_buf = !state_buf;
@@ -213,3 +230,5 @@ ISR(TIMER1_COMPA_vect) {
 ISR(TIMER1_COMPB_vect) {
   switch_txPin();
 }
+
+#endif // ifdef DL_TIMER
