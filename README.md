@@ -18,21 +18,31 @@ Firmware are located inside `firmware` directory. It's supposed to be built with
 [PlatformIO](https://platformio.org/). [VSCode](https://code.visualstudio.com/) with PlatformIO plugin
 are used for development. VSCode workspace file `DigiLivolo.code-workspace` are included and you can
 open it with VSCode. Building project from VSCode are supported if you have PlatformIO plugin installed.
+Can be built from ArduinoIDE as well, but it will take few more steps to prepare. See below for build instructions.
 
-Firmware code has been developed for Digispark module by Digistump. As it has already everything for
-[V-USB](https://www.obdev.at/products/vusb/index.html). Probably would work on any AVR-based Arduino
-module. But you'll have to add USB related parts and adjust V-USB config.
+Firmware code has been developed for
+[Digispark module by Digistump](https://en.wikipedia.org/wiki/List_of_Arduino_boards_and_compatible_systems#Digispark).
+This module already has everything for running [V-USB](https://www.obdev.at/products/vusb/index.html). 
+This firmware should also work on any other ATTiny85 based Arduino module or bare AVR hardware. Depending on the
+board/pin configuration, it might be required to adjust USB-related config headers.
+For other AVR-based boards firmware will require some changes in the code, mostly changing V-USB config header to
+adapt it to hardware. Partial support for other AVR hardware are in the code, but it's not complete and not tested 
+at all as for now. Feel free to open an issue on Github project page to drop a support request for other
+Arduino board.
 
 I've also included custom Digispark board config `digispark-micronucleus-6586` which are based on the
-default Digispark board, but I've tweaked flash size for recent Micronucleus bootloader.
+default Digispark board, but I've tweaked flash size for recent Micronucleus bootloader. Binaries in the
+Releases section has been build for that board config. But for now, the firmware compiles to a size which fits
+into flash even with default 2Kb bootloader, so it should work along with it as well without rebuilding.
 
 Because PlatformIO doesn't have the latest [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino)
-framework, I've included one in `firmware/packages/framework-arduino-avr-digistump`. But the firmware
-should compile on standard framework as well.
+framework, I've included one in `firmware/packages/framework-arduino-avr-digistump`. RF transmitter code
+uses hardware Timer 1 to generate accurate waveforms, so I've changed framework configuration to use Timer 0
+for millis() instead of defaults using Timer 1 for that. See build section below for details.
 
 Library `DLUSB` for the HID USB communications are based on DigiUSB library, included with
-`DigistumpArduino`. It has been modified to allow more than 1 byte bidirectional USB communication via
-USB HID Reports. As well as other various improvements.
+`DigistumpArduino`. Compared to original library it was improved slightly, mostly notable is to allow more than 
+1 byte bidirectional USB communication via USB HID Reports.
 
 ## Usage
 
@@ -46,9 +56,9 @@ sources are provided below.
 _A more generic tool - [hidapitester](https://github.com/todbot/hidapitester) could be used to control device_
 _as well._
 
-Upload firmware to your Digispark module. Connect DATA pin of 433 Mhz transmitter module (SYN115 based modules
-were used & confirmed to work by me) to P5 of Digispark module (this pin can be changed in main sketch code).
-Also connect VCC & GND of the module.
+Upload firmware to your Digispark module (via PlatformIO / Arduino IDE / micronucleus tool).
+Connect DATA pin of 433 Mhz transmitter module (SYN115 based modules were used & confirmed to work by me)
+to P5 of Digispark module (this pin can be changed in main sketch code). Also connect VCC & GND of the module.
 
 ![f](https://raw.githubusercontent.com/N-Storm/DigiLivolo/main/wiring.jpg)
 
@@ -130,17 +140,23 @@ it from there. Requires PlatformIO plugin installed.
 
 ### With Arduino IDE
 
-* Download or clone this repo.
+* Download or clone git repo: `git clone --recurse-submodules https://github.com/N-Storm/DigiLivolo`
 * Install [DigistumpArduino](https://github.com/ArminJo/DigistumpArduino) core.
 * Locate Digistump core install directory and replace `cores/tiny/core_build_options.h` file with version, included
-  with this project: `firmware/packages/framework-arduino-avr-digistump/cores/core_build_options.h`
+  with this project: `[firmware/packages/framework-arduino-avr-digistump/cores/dtiny/core_build_options.h](https://github.com/N-Storm/DigiLivolo/blob/main/firmware/packages/framework-arduino-avr-digistump/cores/dtiny/core_build_options.h)`
 * Create new directory `DigiLivolo`, copy `firmware/src/DigiLivolo.cpp` as `DigiLivolo.ino` there.
 * Copy `DLUSB`, `DLTransmitter` and `Livolo` libraries from `firmware/lib` to your Arduino libraries directory.
 * Open `DigiLivolo.ino` with Arduino IDE, set board to DigiSpark and compile/upload.
 
 ## Building software
 
-From the `DigiLivolo/software` directory:
+Clone git repo with submodules (these are the build requirements for software part):
+
+```
+git clone --recurse-submodules https://github.com/N-Storm/DigiLivolo
+```
+
+Build with CMake from the `DigiLivolo/software` directory:
 
 ```shell
 cmake -DCMAKE_BUILD_TYPE=Release -Wno-dev -B ./build . && cmake --build ./build
@@ -167,6 +183,8 @@ installed, add `-DUSE_SYSTEM_HIDAPI=true` option to first cmake command on the e
 * [hidapi](https://github.com/libusb/hidapi)
 * [hidapitester](https://github.com/todbot/hidapitester)
 * [argp-standalone](https://github.com/tom42/argp-standalone)
+* [CMake](https://cmake.org/)
+* [VSCode](https://code.visualstudio.com/)
 
 ### GitHub Actions
 
