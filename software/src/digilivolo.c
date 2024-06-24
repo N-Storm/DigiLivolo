@@ -143,7 +143,7 @@ int main(int argc, char* argv[])
 		}
 	}
 
-	if (dl_dev->release_number < 0x200) {
+	if (arguments.old_alg && info->release_number < 0x200) {
 		arguments.old_alg = false;
 		if (arguments.verbose) {
 			printf("WARN: Device firmware version doesn't supports old-alg feature. Using default, which should be old algorithm anyways.\n");
