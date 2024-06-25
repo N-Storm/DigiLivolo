@@ -205,7 +205,6 @@ extern "C" {
   {
     // Type cast incoming data to dlusb_packet_t struct
     dlusb_packet_t* p = (dlusb_packet_t*)data;
-    // TODO: Check why len are not <= sizeof(dlusb_packet_t)
     if (p->report_id == REPORT_ID && (p->cmd_id == CMD_SWITCH || p->cmd_id == CMD_SWITCH_OLD) )
       if (!store_packet(p, &rx_buffer))
         return 0xff; // Return FAIL code

@@ -43,6 +43,11 @@ DLTransmitter::DLTransmitter(uint8_t pin) : Livolo(pin)
  * I.e. one code sequence are aired as "(remoteID << 7) + (keycode & 0x7F)".
  * We always set remaining MSB in keycode to 1, it's used to find an end of sequence when we're shifting bits on transmit. */
 
+/// @brief Sends button pressed packet, blocks until complete.
+/// @param remoteID[in] Remote ID
+/// @param keycode[in] Key code
+/// @param use_timer[in] Set to true if you want to use hardware Timer for better accuracy. Will fallback to software method if timer will be unavailable.
+/// @param idleCallback_ptr[in](optional) Pointer to a function(void) which will be called on idling. Should be really small to return very soon.
 void DLTransmitter::sendButton(uint16_t remoteID, uint8_t keycode, bool use_timer, void (*idleCallback_ptr)(void)) {
   // Use new Timer function if available & not used right now.
   #ifdef DL_TIMER
@@ -184,8 +189,9 @@ void DLTransmitter::timer1_stop() {
   sei();
 }
 
-/// @brief Changes time to next interrups by updating output compare registers
+/// @brief Sets interrupt timings by updating output compare registers
 /// @param ocr[in] OCR value (used values are defined in OCR_ macros)
+/// @param ocr_aux[in](optional) OCR value for additional transition (for sending 0 in DL protocol)
 inline void timer1_update(uint8_t ocr, uint8_t ocr_aux = 0) {
   OCR1A = ocr;
   OCR1C = ocr;
@@ -211,10 +217,8 @@ void inline switch_txPin() {
   #endif
 }
 
-ISR(TIMER1_COMPA_vect) {
+ISR(TIMER1_COMPA_vect, ISR_NOBLOCK) {
   switch_txPin();
-
-  sei();
 
   // TODO: no need to update OCR1A, OCR1C with a FULLBIT value
   if ((dl_buf.bytes[0] & 0x01) == 0) {
@@ -227,8 +231,14 @@ ISR(TIMER1_COMPA_vect) {
   dl_buf.buf >>= 1;
 }
 
+/* Starting from GCC v8.x.x we have -mgas-isr-prologues which generates shorter ISR prologues.
+ * So the whole ISR below will be ~5 instructions - no need to add ISR_NOBLOCK. */
+#if defined(__AVR__) && (__GNUC__ >= 8)
 ISR(TIMER1_COMPB_vect) {
+#else
+ISR(TIMER1_COMPB_vect, ISR_NOBLOCK) {
+#endif // __AVR__ && __GNUC__ >= 8
   switch_txPin();
 }
 
-#endif // ifdef DL_TIMER
+#endif // DL_TIMER

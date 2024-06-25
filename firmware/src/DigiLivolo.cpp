@@ -43,6 +43,8 @@ void mk_rdy_packet(dlusb_packet_t* packet) {
   packet->btn_id = 0xEF;
 }
 
+
+/// @brief Wrapper for a member function DLUSB.refresh() to be called from a non-member class
 void DLUSB_refresh_wrapper() {
   DLUSB.refresh();
 }
@@ -80,7 +82,7 @@ void loop() {
           dltransmitter.sendButton(in_buf.remote_id, in_buf.btn_id);
 
         DLUSB.refresh();
-        
+
         /* Send back same packet so that the host software can acknowledge it was
          * processed by the device. */
         DLUSB.write(&in_buf);
