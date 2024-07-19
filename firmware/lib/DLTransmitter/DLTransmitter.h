@@ -96,18 +96,21 @@ private:
   #define OCR_HALFBIT (OCR_FULLBIT)/2
 #endif
 
-#if defined(__AVR__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))
+/// @brief Union for a packet buffer for accessing individual bytes as array.
 typedef union {
+// avr-gcc ver >= 4.7 has a special 24 bit type __uint24, so we use it if availabled, and fallback to standard uint32_t if not.
+#if defined(__AVR__) && (__GNUC__ > 4 || (__GNUC__ == 4 && __GNUC_MINOR__ >= 7))
   __uint24 buf;
   uint8_t bytes[3];
-} dl_buffer_u;
 #else
-typedef union {
   uint32_t buf;
   uint8_t bytes[4];
-} dl_buffer_u;
 #endif
+} dl_buffer_u;
 
 inline void timer1_update(uint8_t ocr, uint8_t ocr_aux);
+
+// Declare builtin function as extern here to avoid linter errors.
+extern uint8_t __builtin_avr_insert_bits (uint32_t map, uint8_t bits, uint8_t val);
 
 #endif // __DLTRansmitter_h__

@@ -39,10 +39,6 @@ DLTransmitter::DLTransmitter(uint8_t pin) : Livolo(pin)
   #endif
 }
 
-/* Sequence begins with remoteID (16 bits), followed by a keycode (7 bits).
- * I.e. one code sequence are aired as "(remoteID << 7) + (keycode & 0x7F)".
- * We always set remaining MSB in keycode to 1, it's used to find an end of sequence when we're shifting bits on transmit. */
-
 /// @brief Sends button pressed packet, blocks until complete.
 /// @param remoteID[in] Remote ID
 /// @param keycode[in] Key code
@@ -57,11 +53,12 @@ void DLTransmitter::sendButton(uint16_t remoteID, uint8_t keycode, bool use_time
       // Clear transmit buffer struct
       memset((void *)&dl_buf, 0, sizeof(dl_buf));
 
-      // Set MSB to 1 (it's not transmitted as keycode are 7-bit, but we use it as a "end of sequence" mark).
+      /* Sequence begins with remoteID (16 bits), followed by a keycode (7 bits).
+       * I.e. one code sequence are aired as "(remoteID << 7) + (keycode & 0x7F)".
+       * We always set remaining MSB in keycode to 1, it's used to find an end of sequence when we're shifting bits on transmit and aren't transmitted. */
       keycode |= (1 << 7);
-        
-      // Prepare data bits in transmit order (reversed as they are right shifted during transmit).
-      // Volatile transmit buffer dl_buf will be set from here each repeat.
+
+      // Prepare data bits in transmit order (reversed as they are right shifted during transmit), it will be copied later to volatile struct dl_buf.
       uint8_t dl_buf_origin[3];
       dl_buf_origin[2] = __builtin_avr_insert_bits(0x70123456, keycode, 0);
       dl_buf_origin[1] = __builtin_avr_insert_bits(0x01234567, (uint8_t)(remoteID & 0xFF), 0);
@@ -206,6 +203,7 @@ inline void timer1_update(uint8_t ocr, uint8_t ocr_aux = 0) {
   }
 }
 
+/// @brief Inverts TX pin output
 void inline switch_txPin() {
   #if defined(__AVR_ATtinyX5__) && defined (DL_STATIC_PIN)
     PINB = 1 << DL_STATIC_PIN;
