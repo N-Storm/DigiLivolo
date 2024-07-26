@@ -20,7 +20,7 @@ jobs:
 
       matrix:
         sys:
-          - { os: ubuntu-latest, container: 'ghcr.io/phusion/holy-build-box/hbb-64', shell: bash           , c_compiler: gcc    , binary_orig: digilivolo }
+          # - { os: ubuntu-latest, container: 'ghcr.io/phusion/holy-build-box/hbb-64', shell: bash           , c_compiler: gcc    , binary_orig: digilivolo }
           - { os: ubuntu-latest, container: 'debian:10'                            , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo }
           - { os: ubuntu-20.04                                                     , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-x86_64 }
           - { os: ubuntu-latest                                                    , shell: 'alpine.sh {0}', crosscompile: i386 , binary_orig: digilivolo    , binary_release: digilivolo-linux-static-i386 }
