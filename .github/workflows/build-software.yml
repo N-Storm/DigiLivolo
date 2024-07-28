@@ -20,16 +20,16 @@ jobs:
 
       matrix:
         sys:
-          # - { os: ubuntu-latest, container: 'ghcr.io/phusion/holy-build-box/hbb-64', shell: bash           , c_compiler: gcc    , binary_orig: digilivolo }
-          - { os: ubuntu-latest, container: 'debian:10'                            , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo }
-          - { os: ubuntu-20.04                                                     , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-x86_64 }
-          - { os: ubuntu-latest                                                    , shell: 'alpine.sh {0}', crosscompile: i386 , binary_orig: digilivolo    , binary_release: digilivolo-linux-static-i386 }
-          - { os: ubuntu-latest, container: 'debian'                               , shell: bash           , crosscompile: armhf, binary_orig: digilivolo    , binary_release: digilivolo-linux-armhf }
-          - { os: ubuntu-latest, container: 'debian'                               , shell: bash           , crosscompile: arm64, binary_orig: digilivolo    , binary_release: digilivolo-linux-arm64 }
-          - { os: ubuntu-20.04                                                     , shell: bash           , c_compiler: clang  , binary_orig: digilivolo }
-          - { os: windows-latest                                                   , shell: 'msys2 {0}'    , c_compiler: gcc    , binary_orig: digilivolo.exe, binary_release: digilivolo-win-x86_64.exe }
-          - { os: windows-latest                                                   , shell: pwsh           , c_compiler: gcc    , binary_orig: digilivolo.exe }
-          - { os: windows-latest                                                   , shell: pwsh           , c_compiler: clang  , binary_orig: digilivolo.exe }
+          - { os: ubuntu-latest, container: 'ghcr.io/phusion/holy-build-box:4.0.1-amd64', shell: bash           , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-hbb64 }
+          - { os: ubuntu-latest, container: 'debian:10'                                 , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo }
+          - { os: ubuntu-20.04                                                          , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-x86_64 }
+          - { os: ubuntu-latest                                                         , shell: 'alpine.sh {0}', crosscompile: i386 , binary_orig: digilivolo    , binary_release: digilivolo-linux-static-i386 }
+          - { os: ubuntu-latest, container: 'debian'                                    , shell: bash           , crosscompile: armhf, binary_orig: digilivolo    , binary_release: digilivolo-linux-armhf }
+          - { os: ubuntu-latest, container: 'debian'                                    , shell: bash           , crosscompile: arm64, binary_orig: digilivolo    , binary_release: digilivolo-linux-arm64 }
+          - { os: ubuntu-20.04                                                          , shell: bash           , c_compiler: clang  , binary_orig: digilivolo }
+          - { os: windows-latest                                                        , shell: 'msys2 {0}'    , c_compiler: gcc    , binary_orig: digilivolo.exe, binary_release: digilivolo-win-x86_64.exe }
+          - { os: windows-latest                                                        , shell: pwsh           , c_compiler: gcc    , binary_orig: digilivolo.exe }
+          - { os: windows-latest                                                        , shell: pwsh           , c_compiler: clang  , binary_orig: digilivolo.exe }
         build_type: [Release]
 
     defaults:
@@ -41,9 +41,9 @@ jobs:
     - name: Install required prerequisite packages on the container and configure git
       if: matrix.sys.container != ''
       run: |
-        apt update || yum -y install https://packages.endpointdev.com/rhel/7/os/x86_64/endpoint-repo.x86_64.rpm
-        apt -y full-upgrade || yum update -y
-        apt install -y curl dialog git python3 python3-pip python3-setuptools sudo wget || yum install -y cmake3 curl dialog git libudev-devel libusb-devel make ninja-build python3 python3-pip python3-setuptools sudo wget
+        [ -x "`which apt 2>/dev/null`" ] && apt update || yum -y install https://packages.endpointdev.com/rhel/8/main/x86_64/endpoint-repo.noarch.rpm || echo "WARN: Endpoint repo add failed!"
+        [ -x "`which apt 2>/dev/null`" ] && apt -y full-upgrade || yum update -y
+        [ -x "`which apt 2>/dev/null`" ] && apt install -y sudo git dialog python3 python3-pip python3-setuptools curl wget || yum install -y sudo git dialog python3 python3-pip python3-setuptools make cmake3 libusb libudev-devel curl wget
         git --version
         git config --global --add safe.directory /__w/DigiLivolo/DigiLivolo
         echo
@@ -58,7 +58,7 @@ jobs:
 
     - name: Install packages required for the workflow and build deps
       uses: ConorMacBride/install-package@v1
-      if: matrix.sys.container != 'ghcr.io/phusion/holy-build-box/hbb-64'
+      if: matrix.sys.container != 'ghcr.io/phusion/holy-build-box:4.0.1-amd64'
       with:
         apt: build-essential clang cmake file gcc libc6-dev libudev-dev make ninja-build pkg-config sudo
 
@@ -67,12 +67,8 @@ jobs:
       with:
         submodules: 'recursive'
 
-    - name: '[HBB] Create symlink cmake -> cmake3'
-      if: matrix.sys.container == 'ghcr.io/phusion/holy-build-box/hbb-64'
-      run: ln -s /usr/bin/cmake3 /usr/bin/cmake
-
     - name: Install Ninja
-      if: matrix.sys.shell == 'pwsh'
+      if: matrix.sys.shell == 'pwsh' || matrix.sys.container == 'ghcr.io/phusion/holy-build-box:4.0.1-amd64'
       uses: turtlesec-no/get-ninja@main
 
     - name: Setup MSYS2 UCRT64
