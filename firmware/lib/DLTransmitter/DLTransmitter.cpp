@@ -206,7 +206,10 @@ inline void timer1_update(uint8_t ocr, uint8_t ocr_aux = 0) {
 /// @brief Inverts TX pin output
 void inline switch_txPin() {
   #if defined(__AVR_ATtinyX5__) && defined (DL_STATIC_PIN)
-    PINB = 1 << DL_STATIC_PIN;
+    /* Asm here to do atomic pin flip with SBI instruction.
+     * Basically same as writing PINB = 1 << DL_STATIC_PIN;, but saves 3 instructions
+     * of push/set/pop register for OUT instruction other way. */
+    asm("sbi %0, %1" : : "I" (_SFR_IO_ADDR(PINB)), "I" (DL_STATIC_PIN)  );    
   #elif defined(__AVR_ATtinyX5__)
     PINB = 1 << txPin_g;
   #else
@@ -229,14 +232,17 @@ ISR(TIMER1_COMPA_vect, ISR_NOBLOCK) {
   dl_buf.buf >>= 1;
 }
 
-/* Starting from GCC v8.x.x we have -mgas-isr-prologues which generates shorter ISR prologues.
- * So the whole ISR below will be ~5 instructions - no need to add ISR_NOBLOCK. */
-#if defined(__AVR__) && (__GNUC__ >= 8)
-ISR(TIMER1_COMPB_vect) {
+/* This interrupt are used only to flip txPin. If we have DL_STATIC_PIN set,
+ * then it's only 1 SBI instruction, so no need for an ISR prologue, etc. */
+#if defined(__AVR_ATtinyX5__) && defined(DL_STATIC_PIN)
+ISR(TIMER1_COMPB_vect, ISR_NAKED) {
 #else
 ISR(TIMER1_COMPB_vect, ISR_NOBLOCK) {
-#endif // __AVR__ && __GNUC__ >= 8
+#endif // __AVR_ATtinyX5__ && DL_STATIC_PIN
   switch_txPin();
+#if defined(__AVR_ATtinyX5__) && defined(DL_STATIC_PIN)
+  asm("reti");
+#endif // __AVR_ATtinyX5__ && DL_STATIC_PIN
 }
 
 #endif // DL_TIMER

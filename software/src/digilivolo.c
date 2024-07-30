@@ -43,7 +43,7 @@
 #include <hidapi_darwin.h>
 #endif
 
- // [argp] Our argp parser.
+// [argp] Our argp parser.
 static struct argp argp = { options, parse_opt, args_doc, doc };
 
 int main(int argc, char* argv[])
