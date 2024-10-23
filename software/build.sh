@@ -9,10 +9,8 @@
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-pushd .
-
-cd ${SCRIPT_DIR}
 echo "Working dir: ${SCRIPT_DIR}"
+pushd ${SCRIPT_DIR}
 
 if [[ ! -z "$1" ]] && [[ "$1" == "full" ]]; then
     rm -r ${SCRIPT_DIR}/build
