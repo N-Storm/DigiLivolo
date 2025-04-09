@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.5 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.10 FATAL_ERROR)
 set(PROJECT_NAME "digilivolo")
 project(${PROJECT_NAME} C)
 set(CMAKE_PROJECT_INCLUDE ${CMAKE_TOOLCHAIN_FILE})
