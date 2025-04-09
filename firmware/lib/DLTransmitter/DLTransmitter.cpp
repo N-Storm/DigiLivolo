@@ -207,8 +207,10 @@ inline void timer1_update(uint8_t ocr, uint8_t ocr_aux = 0) {
 void inline switch_txPin() {
   #if defined(__AVR_ATtinyX5__) && defined (DL_STATIC_PIN)
     /* Asm here to do atomic pin flip with SBI instruction.
-     * Basically same as writing PINB = 1 << DL_STATIC_PIN;, but saves 3 instructions
-     * of push/set/pop register for OUT instruction other way. */
+     * Basically same as writing PINB = 1 << DL_STATIC_PIN, but saves
+     * 3 instructions of push/set/pop register for OUT instruction other way.
+     * If changed - check interrupts that call this and might rely
+     * on having only one SBI instruction here conditionally. */
     asm("sbi %0, %1" : : "I" (_SFR_IO_ADDR(PINB)), "I" (DL_STATIC_PIN)  );    
   #elif defined(__AVR_ATtinyX5__)
     PINB = 1 << txPin_g;
@@ -238,11 +240,11 @@ ISR(TIMER1_COMPA_vect, ISR_NOBLOCK) {
 ISR(TIMER1_COMPB_vect, ISR_NAKED) {
 #else
 ISR(TIMER1_COMPB_vect, ISR_NOBLOCK) {
-#endif // __AVR_ATtinyX5__ && DL_STATIC_PIN
+#endif
   switch_txPin();
 #if defined(__AVR_ATtinyX5__) && defined(DL_STATIC_PIN)
   asm("reti");
-#endif // __AVR_ATtinyX5__ && DL_STATIC_PIN
+#endif
 }
 
 #endif // DL_TIMER
