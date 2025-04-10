@@ -74,6 +74,14 @@ int main(int argc, char* argv[])
 	if (hid_init())
 		return -1;
 
+	if (arguments.list_devices) {
+		devices = hid_enumerate(0, 0);
+		print_devices(devices);
+		hid_free_enumeration(devices);
+		hid_exit();
+		return 0;
+	}
+
 #if defined(__APPLE__) && HID_API_VERSION >= HID_API_MAKE_VERSION(0, 12, 0)
 	// To work properly needs to be called before hid_open/hid_open_path after hid_init.
 	// Best/recommended option - call it right after hid_init.

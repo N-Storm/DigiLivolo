@@ -40,15 +40,17 @@ const char* argp_program_bug_address = "https://github.com/N-Storm/DigiLivolo/\n
 Copyright (c) 2024 GitHub user N-Storm.\n\
 License GPLv3+: GNU GPL version 3 or later <http://gnu.org/licenses/gpl.html>";
 
-char args_doc[] = "REMOTE_ID KEY_CODE";
+char args_doc[] = "REMOTE_ID KEY_CODE\n\
+-l or --list";
 
 struct argp_option options[] = {
   {0,             0,   0,                            0, "Positional arguments:"                       },
   {"REMOTE_ID",   0,   0, OPTION_DOC | OPTION_NO_USAGE, "Livilo Remote ID (1-65535)"                  },
   {"KEY_CODE",    0,   0, OPTION_DOC | OPTION_NO_USAGE, "Livilo Key ID (1-255)"                       },
   {0,             0,   0,                            0, "Options:"                                    },
-  {"verbose",   'v',   0,                            0, "Produce verbose output"                      },
+  {"list",      'l',   0,                            0, "List USB devices"                            },
   {"old-alg",   'o',   0,                            0, "Use deperecated original transmit algorithm" },
+  {"verbose",   'v',   0,                            0, "Produce verbose output"                      },
   { 0 }
 };
 
@@ -66,6 +68,9 @@ error_t parse_opt(int key, char* arg, struct argp_state* state)
 		break;
 	case 'v':
 		arguments->verbose = true;
+		break;
+	case 'l':
+		arguments->list_devices = true;
 		break;
 
 	case ARGP_KEY_ARG:
@@ -106,7 +111,7 @@ error_t parse_opt(int key, char* arg, struct argp_state* state)
 		break;
 
 	case ARGP_KEY_END:
-		if (state->arg_num < 2)
+		if (state->arg_num < 2 && !arguments->list_devices)
 			// Not enough arguments.
 			argp_usage(state);
 		break;

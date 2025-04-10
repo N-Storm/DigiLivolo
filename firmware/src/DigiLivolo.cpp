@@ -68,7 +68,7 @@ void loop() {
 
   // Read data from host if available.
   if (DLUSB.available()) {
-    // Turn on the LED to indicate received packet.
+    // Turn on the LED to indicate received USB packet.
     digitalWrite(LED_BUILTIN, HIGH);
 
     if (DLUSB.read(&in_buf)) {
