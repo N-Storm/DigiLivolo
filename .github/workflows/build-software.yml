@@ -22,11 +22,13 @@ jobs:
         sys:
           - { os: ubuntu-latest, container: 'ghcr.io/phusion/holy-build-box:4.0.1-amd64', shell: bash           , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-hbb64 }
           - { os: ubuntu-latest, container: 'debian:10'                                 , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo }
-          - { os: ubuntu-20.04                                                          , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-x86_64 }
-          - { os: ubuntu-latest                                                         , shell: 'alpine.sh {0}', crosscompile: i386 , binary_orig: digilivolo    , binary_release: digilivolo-linux-static-i386 }
+          - { os: ubuntu-latest, container: 'i386/debian:10'                            , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-i386 }
+          - { os: ubuntu-22.04                                                          , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-x86_64 }
+          - { os: ubuntu-22.04                                                          , shell: 'alpine.sh {0}', crosscompile: i386 , binary_orig: digilivolo    , binary_release: digilivolo-linux-static-i386 }
           - { os: ubuntu-latest, container: 'debian'                                    , shell: bash           , crosscompile: armhf, binary_orig: digilivolo    , binary_release: digilivolo-linux-armhf }
           - { os: ubuntu-latest, container: 'debian'                                    , shell: bash           , crosscompile: arm64, binary_orig: digilivolo    , binary_release: digilivolo-linux-arm64 }
-          - { os: ubuntu-20.04                                                          , shell: bash           , c_compiler: clang  , binary_orig: digilivolo }
+          - { os: ubuntu-22.04                                                          , shell: bash           , c_compiler: clang  , binary_orig: digilivolo }
+          - { os: ubuntu-latest                                                         , shell: bash           , c_compiler: clang  , binary_orig: digilivolo }
           - { os: windows-latest                                                        , shell: 'msys2 {0}'    , c_compiler: gcc    , binary_orig: digilivolo.exe, binary_release: digilivolo-win-x86_64.exe }
           - { os: windows-latest                                                        , shell: pwsh           , c_compiler: gcc    , binary_orig: digilivolo.exe }
           - { os: windows-latest                                                        , shell: pwsh           , c_compiler: clang  , binary_orig: digilivolo.exe }
@@ -51,9 +53,10 @@ jobs:
 
     - name: Install & configure Alpine Linux build environment for i386 build
       uses: jirutka/setup-alpine@v1
-      if: matrix.sys.crosscompile == 'i386'
+      if: matrix.sys.shell == 'alpine.sh {0}'
       with:
         arch: x86
+        branch: v3.20
         packages: build-base cmake curl dialog eudev eudev-dev eudev-libs git libusb-dev linux-headers make ninja-build pkgconf pkgconf-dev py3-pip py3-setuptools python3 samurai sudo wget
 
     - name: Install packages required for the workflow and build deps
@@ -81,7 +84,7 @@ jobs:
         pacboy: cmake:p ninja:p toolchain:p
 
     - name: Install cross compiling toolchain and deps
-      if: matrix.sys.crosscompile != '' && matrix.sys.crosscompile != 'i386'
+      if: matrix.sys.crosscompile != '' && matrix.sys.shell != 'alpine.sh {0}'
       shell: bash
       run: |
         echo "Installing cross toolchain for ${{ matrix.sys.crosscompile }}"
