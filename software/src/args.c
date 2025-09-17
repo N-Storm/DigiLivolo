@@ -1,6 +1,6 @@
 /* Part of the DigiLivolo control software.
  * https://github.com/N-Storm/DigiLivolo/
- * Copyright (c) 2024 GitHub user N-Storm.
+ * Copyright (c) 2024,2025 GitHub user N-Storm.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
