@@ -20,19 +20,19 @@ jobs:
 
       matrix:
         sys:
-          - { os: ubuntu-latest, container: 'ghcr.io/phusion/holy-build-box:4.0.1-amd64', shell: bash           , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-hbb64 }
-          - { os: ubuntu-latest, container: 'debian:11'                                 , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo }
-          - { os: ubuntu-latest, container: 'i386/debian:11'                            , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-i386 }
-          - { os: ubuntu-22.04                                                          , shell: bash           , c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-x86_64 }
-          - { os: ubuntu-22.04                                                          , shell: 'alpine.sh {0}', c_compiler: gcc    , binary_orig: digilivolo    , binary_release: digilivolo-linux-static-x86_64 }
-          - { os: ubuntu-22.04                                                          , shell: 'alpine.sh {0}', crosscompile: i386 , binary_orig: digilivolo    , binary_release: digilivolo-linux-static-i386 }
-          - { os: ubuntu-latest, container: 'debian'                                    , shell: bash           , crosscompile: armhf, binary_orig: digilivolo    , binary_release: digilivolo-linux-armhf }
-          - { os: ubuntu-latest, container: 'debian'                                    , shell: bash           , crosscompile: arm64, binary_orig: digilivolo    , binary_release: digilivolo-linux-arm64 }
-          - { os: ubuntu-22.04                                                          , shell: bash           , c_compiler: clang  , binary_orig: digilivolo }
-          - { os: ubuntu-latest                                                         , shell: bash           , c_compiler: clang  , binary_orig: digilivolo }
-          - { os: windows-latest                                                        , shell: 'msys2 {0}'    , c_compiler: gcc    , binary_orig: digilivolo.exe, binary_release: digilivolo-win-x86_64.exe }
-          - { os: windows-latest                                                        , shell: pwsh           , c_compiler: gcc    , binary_orig: digilivolo.exe }
-          - { os: windows-latest                                                        , shell: pwsh           , c_compiler: clang  , binary_orig: digilivolo.exe }
+          - { os: ubuntu-latest, container: 'ghcr.io/phusion/holy-build-box:4.0.1-amd64', shell: bash           , c_compiler: gcc            , binary_orig: digilivolo    , binary_release: digilivolo-linux-hbb64 }
+          - { os: ubuntu-latest, container: 'debian:oldoldstable'                       , shell: bash           , c_compiler: gcc            , binary_orig: digilivolo }
+          - { os: ubuntu-latest, container: 'i386/debian:oldoldstable'                  , shell: bash           , c_compiler: gcc            , binary_orig: digilivolo    , binary_release: digilivolo-linux-i386 }
+          - { os: ubuntu-22.04                                                          , shell: bash           , c_compiler: gcc            , binary_orig: digilivolo    , binary_release: digilivolo-linux-x86_64 }
+          - { os: ubuntu-22.04                                                          , shell: 'alpine.sh {0}', crosscompile: static-x86_64, binary_orig: digilivolo    , binary_release: digilivolo-linux-static-x86_64 }
+          - { os: ubuntu-22.04                                                          , shell: 'alpine.sh {0}', crosscompile: static-i386  , binary_orig: digilivolo    , binary_release: digilivolo-linux-static-i386 }
+          - { os: ubuntu-latest, container: 'debian:oldoldstable'                       , shell: bash           , crosscompile: armhf        , binary_orig: digilivolo    , binary_release: digilivolo-linux-armhf }
+          - { os: ubuntu-latest, container: 'debian:oldoldstable'                       , shell: bash           , crosscompile: arm64        , binary_orig: digilivolo    , binary_release: digilivolo-linux-arm64 }
+          - { os: ubuntu-22.04                                                          , shell: bash           , c_compiler: clang          , binary_orig: digilivolo }
+          - { os: ubuntu-latest                                                         , shell: bash           , c_compiler: clang          , binary_orig: digilivolo }
+          - { os: windows-latest                                                        , shell: 'msys2 {0}'    , c_compiler: gcc            , binary_orig: digilivolo.exe, binary_release: digilivolo-win-x86_64.exe }
+          - { os: windows-latest                                                        , shell: pwsh           , c_compiler: gcc            , binary_orig: digilivolo.exe }
+          - { os: windows-latest                                                        , shell: pwsh           , c_compiler: clang          , binary_orig: digilivolo.exe }
         build_type: [Release]
 
     defaults:
@@ -44,19 +44,19 @@ jobs:
     - name: Install required prerequisite packages on the container and configure git
       if: matrix.sys.container != ''
       run: |
-        [ -x "`which apt 2>/dev/null`" ] && apt update || yum -y install https://packages.endpointdev.com/rhel/8/main/x86_64/endpoint-repo.noarch.rpm || echo "WARN: Endpoint repo add failed!"
-        [ -x "`which apt 2>/dev/null`" ] && apt -y full-upgrade || yum update -y
-        [ -x "`which apt 2>/dev/null`" ] && apt install -y sudo git dialog python3 python3-pip python3-setuptools curl wget || yum install -y sudo git dialog python3 python3-pip python3-setuptools make cmake3 libusb libudev-devel curl wget
+        [ -x "`which apt 2>/dev/null`" ] && apt-get update || yum -y install https://packages.endpointdev.com/rhel/8/main/x86_64/endpoint-repo.noarch.rpm || echo "WARN: Endpoint repo add failed!"
+        [ -x "`which apt 2>/dev/null`" ] && apt-get -y full-upgrade || yum update -y
+        [ -x "`which apt 2>/dev/null`" ] && apt-get install -y sudo git dialog python3 python3-pip python3-setuptools curl wget || yum install -y sudo git dialog python3 python3-pip python3-setuptools make cmake3 libusb libudev-devel curl wget
         git --version
         git config --global --add safe.directory /__w/DigiLivolo/DigiLivolo
         echo
         cat /etc/os-release
 
-    - name: Install & configure Alpine Linux build environment for i386 build
+    - name: Install & configure Alpine Linux build environment
       uses: jirutka/setup-alpine@v1
       if: matrix.sys.shell == 'alpine.sh {0}'
       with:
-        arch: ${{ matrix.sys.crosscompile == 'i386' && 'x86' || 'x86_64' }}
+        arch: ${{ matrix.sys.crosscompile == 'static-i386' && 'x86' || 'x86_64' }}
         branch: v3.20
         packages: build-base cmake curl dialog eudev eudev-dev eudev-libs git libusb-dev linux-headers make ninja-build pkgconf pkgconf-dev py3-pip py3-setuptools python3 samurai sudo wget
 
