@@ -19,15 +19,26 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Cache toolchain
+        id: cache-toolchain
+        uses: actions/cache@v5
+        with:
+          path: firmware/packages/toolchain-atmelavr/toolchain-atmelavr-linux_x86_64
+          key: toolchain-atmelavr-linux_x86_64
+
       # TODO: This is a very dirty quick hack
       - name: Download and prepare AVR toolchain
+        if: steps.cache-toolchain.outputs.cache-hit != 'true'
         run: |
           cd firmware/packages/toolchain-atmelavr
           wget "${{ env.toolchain_url }}"
           tar xf $( basename "${{ env.toolchain_url }}" )
           mv ./avr8-gnu-toolchain-linux_x86_64 ./toolchain-atmelavr-linux_x86_64
           mv ./toolchain-atmelavr-linux_x86_64-package.json ./toolchain-atmelavr-linux_x86_64/package.json
-          sed -i -E 's/toolchain-atmelavr-windows-4\.1520\.250814\.tar\.gz/toolchain-atmelavr-linux_x86_64/' ../../platformio.ini
+
+      - name: Enable custom toolchain
+        run: |
+          sed -i -E 's/toolchain-atmelavr-windows-4\.1520\.250814\.tar\.gz/toolchain-atmelavr-linux_x86_64/' firmware/platformio.ini
 
       - name: Build PlatformIO project
         uses: karniv00l/platformio-run-action@v1
