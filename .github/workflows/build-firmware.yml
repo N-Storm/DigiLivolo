@@ -11,15 +11,29 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    env:
+      toolchain_url: https://ww1.microchip.com/downloads/aemDocuments/documents/DEV/ProductDocuments/SoftwareTools/avr8-gnu-toolchain-4.0.0.52-linux.any.x86_64.tar.gz
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      # TODO: This is a very dirty quick hack
+      - name: Download and prepare AVR toolchain
+        run: |
+          cd firmware/packages/toolchain-atmelavr
+          wget "${{ env.toolchain_url }}"
+          tar xf $( basename "${{ env.toolchain_url }}" )
+          mv ./avr8-gnu-toolchain-linux_x86_64 ./toolchain-atmelavr-linux_x86_64
+          mv ./toolchain-atmelavr-linux_x86_64-package.json ./toolchain-atmelavr-linux_x86_64/package.json
+          sed -i -E 's/toolchain-atmelavr-windows-4\.1520\.250814\.tar\.gz/toolchain-atmelavr-linux_x86_64/' ../../platformio.ini
 
       - name: Build PlatformIO project
         uses: karniv00l/platformio-run-action@v1
         with:
           project-dir: firmware
-          environments: digispark-tiny
+          environments: digispark-tiny-newergcc
           disable-auto-clean: true
 
       - name: Make and upload release

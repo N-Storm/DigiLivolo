@@ -1,0 +1,21 @@
+{
+  "name": "toolchain-atmelavr",
+  "version": "4.1510.250924",
+  "description": "GCC Toolchain for Microchip AVR microcontrollers",
+  "keywords": [
+    "toolchain",
+    "build tools",
+    "compiler",
+    "assembler",
+    "linker",
+    "preprocessor",
+    "microchip",
+    "avr"
+  ],
+  "homepage": "https://www.microchip.com/en-us/tools-resources/develop/microchip-studio/gcc-compilers",
+  "license": "GPL-2.0-or-later",
+  "system": [
+    "linux",
+    "linux_x86_64"
+  ]
+}
